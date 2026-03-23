@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image"; 
+import { useRouter } from "next/navigation"; 
 
 export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter(); 
+
+  const handleLogin = () => {
+    router.push("/dashboard"); 
+  };
 
   return (
     <div className="min-h-screen bg-[#0B1120] flex items-center justify-center relative font-sans">
@@ -29,7 +34,7 @@ export default function AdminLogin() {
           Please enter your credentials to manage the platform.
         </p>
 
-        <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-5">
           
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-300">Email Address</label>
@@ -42,7 +47,6 @@ export default function AdminLogin() {
                 type="email"
                 placeholder="admin@commutewake.com"
                 className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-600 text-sm"
-                required
               />
             </div>
           </div>
@@ -63,7 +67,6 @@ export default function AdminLogin() {
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
-                required
               />
               <button
                 type="button"
@@ -87,8 +90,10 @@ export default function AdminLogin() {
             </div>
           </div>
 
+          
           <button
-            type="submit"
+            type="button"
+            onClick={handleLogin}
             className="w-full mt-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
           >
             Sign In to Dashboard

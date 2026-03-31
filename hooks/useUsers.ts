@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 export type UserStatus = 'All Users' | 'Active' | 'Inactive';
 
@@ -21,6 +21,26 @@ export function useUsers() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<UserStatus>("All Users");
+
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/admin/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUserRole(data.user.role);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user role", err);
+      }
+    }
+    fetchUser();
+  }, []);
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
@@ -48,6 +68,41 @@ export function useUsers() {
     setUsers(prev => prev.filter(user => user.id !== id));
   };
 
+  const handleAddSubAdmin = async (email: string, password: string): Promise<boolean> => {
+    setAddLoading(true);
+    setAddError("");
+    try {
+      const res = await fetch("/api/admin/users/sub-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        const newAdminUser: User = {
+          id: Math.floor(Math.random() * 10000) + 100, // Temporary ID
+          name: email.split('@')[0],
+          email: email,
+          role: "Sub Admin",
+          joinDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          status: "Active"
+        };
+        setUsers(prev => [...prev, newAdminUser]);
+        setIsAddModalOpen(false);
+        return true;
+      } else {
+        setAddError(data.error || "Failed to create sub admin");
+        return false;
+      }
+    } catch (err) {
+      setAddError("An error occurred. Please try again.");
+      return false;
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   return {
     users: filteredUsers,
     totalUsers: users.length,
@@ -56,6 +111,12 @@ export function useUsers() {
     activeTab,
     setActiveTab,
     toggleUserStatus,
-    deleteUser
+    deleteUser,
+    currentUserRole,
+    isAddModalOpen,
+    setIsAddModalOpen,
+    handleAddSubAdmin,
+    addLoading,
+    addError
   };
 }

@@ -8,6 +8,7 @@ export type UserConnection = {
 
 export type DashboardStats = {
   activeUsers: string;
+  registeredUsers: string;
   connectedDevices: string;
   alarmsTriggered: string;
 };
@@ -21,6 +22,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     stats: {
       activeUsers: "12,840",
+      registeredUsers: "25,120",
       connectedDevices: "4,210",
       alarmsTriggered: "15",
     },

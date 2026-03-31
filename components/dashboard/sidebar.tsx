@@ -2,9 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function Sidebar() {
   const pathname = usePathname(); 
+  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/admin/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user", err);
+      }
+    }
+    fetchUser();
+  }, []);
+
+  const displayName = user?.email ? user.email.split("@")[0] : "Loading...";
+  const displayRole = user?.role === "super-admin" ? "Super Admin" : user?.role === "sub-admin" ? "Sub Admin" : user?.role || "Admin";
+  const initial = displayName !== "Loading..." && displayName.length > 0 ? displayName.charAt(0).toUpperCase() : "-";
 
   return (
     <aside className="w-64 bg-[#1B2435] border-r border-slate-700/30 flex flex-col h-screen sticky top-0">
@@ -77,10 +98,25 @@ export function Sidebar() {
       </nav>
 
       <div className="p-6 mt-auto">
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold text-white">Mira Medilo</span>
-          <span className="text-xs text-slate-500">System Admin</span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#0F172A] border border-slate-700/50 flex items-center justify-center text-white font-bold">
+            {initial}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-white">{displayName}</span>
+            <span className="text-xs text-slate-500">{displayRole}</span>
+          </div>
         </div>
+        <button 
+          onClick={async () => {
+            document.cookie = "adminAuthToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = "/";
+          }}
+          className="mt-6 w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Log Out
+        </button>
       </div>
     </aside>
   );

@@ -1,7 +1,15 @@
+"use client";
+
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { UsersTable } from "@/components/users/users-table";
+import { useUsers } from "@/hooks/useUsers";
 
 export default function UsersPage() {
+  const { 
+    users, totalUsers, searchQuery, setSearchQuery, 
+    activeTab, setActiveTab, toggleUserStatus, deleteUser 
+  } = useUsers();
+
   return (
     <div className="min-h-screen bg-[#111827] flex font-sans">
       <Sidebar />
@@ -20,22 +28,35 @@ export default function UsersPage() {
 
         <div className="flex flex-col gap-4">
           <div className="flex gap-6 border-b border-slate-700/50 pb-2">
-            <button className="text-white font-medium border-b-2 border-white pb-2 -mb-[9px]">All Users</button>
-            <button className="text-slate-400 hover:text-white font-medium pb-2 -mb-[9px]">Active</button>
-            <button className="text-slate-400 hover:text-white font-medium pb-2 -mb-[9px]">Inactive</button>
+            {(["All Users", "Active", "Inactive"] as const).map(tab => (
+              <button 
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`transition-colors font-medium pb-2 -mb-[9px] ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
           <div className="relative mt-4">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, email or role..." 
               className="bg-[#242F41] text-sm text-white border border-slate-700/30 rounded-lg pl-9 pr-4 py-3 w-full focus:outline-none focus:border-slate-500 placeholder:text-slate-500"
             />
           </div>
         </div>
 
-        <UsersTable />
+        <UsersTable 
+          users={users} 
+          totalUsers={totalUsers}
+          onToggleStatus={toggleUserStatus}
+          onDelete={deleteUser}
+        />
       </main>
     </div>
   );

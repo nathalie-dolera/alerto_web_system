@@ -1,14 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation"; 
 
 export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter(); 
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleLogin = () => {
-    router.push("/dashboard"); 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const handleTogglePassword = () => {
+    if (showPassword) {
+      setShowPassword(false);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    } else {
+      setShowPassword(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setShowPassword(false);
+      }, 4000);
+    }
+  };
+
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!email || !password) {
+      setError("Please put email and password.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push("/dashboard"); 
+      } else {
+        setError(data.error || "Login failed");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,11 +80,17 @@ export default function AdminLogin() {
 
       <div className="bg-[#1E293B] p-8 rounded-2xl w-full max-w-[420px] shadow-2xl">
         <h1 className="text-2xl font-bold text-white mb-1.5">Admin Login</h1>
-        <p className="text-slate-400 text-sm mb-8">
+        <p className="text-slate-400 text-sm mb-6">
           Please enter your credentials to manage the platform.
         </p>
 
-        <form className="space-y-5">
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-5" onSubmit={handleLogin}>
           
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-300">Email Address</label>
@@ -45,6 +101,9 @@ export default function AdminLogin() {
               </svg>
               <input
                 type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@commutewake.com"
                 className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-600 text-sm"
               />
@@ -65,12 +124,15 @@ export default function AdminLogin() {
               </svg>
               <input
                 type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={handleTogglePassword}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
               >
                 {showPassword ? (
@@ -92,15 +154,17 @@ export default function AdminLogin() {
 
           
           <button
-            type="button"
-            onClick={handleLogin}
-            className="w-full mt-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+            type="submit"
+            disabled={loading}
+            className={`w-full mt-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm ${loading ? "opacity-75 cursor-not-allowed" : ""}`}
           >
-            Sign In to Dashboard
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14"></path>
-              <path d="m12 5 7 7-7 7"></path>
-            </svg>
+            {loading ? "Signing In..." : "Sign In to Dashboard"}
+            {!loading && (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg>
+            )}
           </button>
         </form>
       </div>

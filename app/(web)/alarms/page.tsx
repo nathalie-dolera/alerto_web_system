@@ -1,7 +1,12 @@
+"use client";
+
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { AlarmsTable } from "@/components/alarms/alarms-table";
+import { ExportButton } from "@/components/dashboard/export-button";
+import { useAlarms } from "@/hooks/useAlarms";
 
 export default function AlarmsPage() {
+  const { alarms, loading } = useAlarms();
   return (
     <div className="min-h-screen bg-[#111827] flex font-sans">
       <Sidebar />
@@ -12,10 +17,7 @@ export default function AlarmsPage() {
             <h1 className="text-3xl font-bold text-white mb-2">Alarms Management</h1>
             <p className="text-slate-400">Monitor and resolve triggered security alarms across the facility</p>
           </div>
-          <button className="flex items-center gap-2 bg-[#242F41] border border-slate-700/50 hover:bg-slate-700/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export Data
-          </button>
+          <ExportButton data={alarms} filename="alerto_alarms_export.csv" label="Export Data" />
         </header>
 
         <div className="flex gap-6 border-b border-slate-700/50 mb-6">
@@ -55,7 +57,11 @@ export default function AlarmsPage() {
           </div>
         </div>
 
-        <AlarmsTable />
+        {loading ? (
+          <div className="flex justify-center items-center py-20 text-slate-400">Loading alarms...</div>
+        ) : (
+          <AlarmsTable alarms={alarms} />
+        )}
 
       </main>
     </div>

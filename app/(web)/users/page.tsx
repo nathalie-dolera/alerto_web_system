@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { UsersTable } from "@/components/users/users-table";
 import { useUsers } from "@/hooks/useUsers";
+import { downloadCSV } from "@/lib/exportUtils";
 
 export default function UsersPage() {
   const [newEmail, setNewEmail] = useState("");
@@ -35,9 +36,12 @@ export default function UsersPage() {
                 Add Sub Admin
               </button>
             )}
-            <button className="flex items-center gap-2 bg-[#242F41] border border-slate-700/50 hover:bg-slate-700/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button 
+              onClick={() => downloadCSV(users, "alerto_users_export.csv")}
+              className="flex items-center gap-2 bg-[#242F41] border border-slate-700/50 hover:bg-slate-700/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export CSV
+              Export Data
             </button>
           </div>
         </header>

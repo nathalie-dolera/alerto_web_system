@@ -2,6 +2,7 @@ import { getDashboardData } from "@/hooks/useDashboardData";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { UserTable } from "@/components/dashboard/user-table";
+import { ExportButton } from "@/components/dashboard/export-button";
 
 
 
@@ -21,17 +22,14 @@ export default async function DashboardPage() {
             <h1 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
             <p className="text-slate-400">Real-time transit system health and monitoring</p>
           </div>
-          <button className="flex items-center gap-2 bg-[#242F41] border border-slate-700/50 hover:bg-slate-700/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export Report
-          </button>
+          <ExportButton stats={stats} users={users} filename="alerto_dashboard_report.csv" label="Export Data" />
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Active Users" value={stats.activeUsers} type="users" />
-          <StatCard title="Registered Users" value={stats.registeredUsers} type="registeredUsers" />
-          <StatCard title="Connected Devices" value={stats.connectedDevices} type="devices" />
-          <StatCard title="Alarms Triggered" value={stats.alarmsTriggered} type="alarms" />
+          <StatCard title="Active Users" value={stats.activeUsers} type="users" href="/users?tab=Active" />
+          <StatCard title="Registered Users" value={stats.registeredUsers} type="registeredUsers" href="/users?tab=All%20Users" />
+          <StatCard title="Connected Devices" value={stats.connectedDevices} type="devices" href="/devices" />
+          <StatCard title="Alarms Triggered" value={stats.alarmsTriggered} type="alarms" href="/alarms" />
         </div>
 
         <UserTable users={users} />

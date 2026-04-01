@@ -1,13 +1,7 @@
 "use client";
 
-export function DevicesTable() {
-  const devicesList = [
-    { id: 1, account: "mira.m@alerto.com", deviceId: "DEV-9021", lastPing: "2 mins ago", battery: 85, batColor: "bg-emerald-400", status: "Connected" },
-    { id: 2, account: "nathalie.d@alerto.com", deviceId: "DEV-4432", lastPing: "5 mins ago", battery: 42, batColor: "bg-orange-400", status: "Connected" },
-    { id: 3, account: "fiona.a@alerto.com", deviceId: "DEV-1120", lastPing: "1 hour ago", battery: 15, batColor: "bg-blue-500", status: "Low Power" },
-    { id: 4, account: "justine.j@alerto.com", deviceId: "DEV-8876", lastPing: "12 mins ago", battery: 100, batColor: "bg-emerald-400", status: "Connected" },
-    { id: 5, account: "joseph.m@alerto.com", deviceId: "DEV-5541", lastPing: "3 days ago", battery: 0, batColor: "bg-slate-600", status: "Offline" },
-  ];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function DevicesTable({ devices }: { devices: any[] }) {
 
   return (
     <div className="bg-[#242F41] rounded-xl border border-slate-700/30 overflow-hidden flex flex-col mt-6">
@@ -24,7 +18,7 @@ export function DevicesTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/30">
-            {devicesList.map((dev) => (
+            {devices.map((dev) => (
               <tr key={dev.id} className="hover:bg-slate-700/10 transition-colors">
                 <td className="px-6 py-5 text-white font-medium">{dev.account}</td>
                 <td className="px-6 py-5">
@@ -43,13 +37,12 @@ export function DevicesTable() {
                 </td>
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${
-                      dev.status === 'Connected' ? 'bg-emerald-400' : 
-                      dev.status === 'Low Power' ? 'bg-orange-400' : 'bg-slate-500'
-                    }`}></span>
+                    <span className={`w-2 h-2 rounded-full ${dev.status === 'Connected' ? 'bg-emerald-400' :
+                        dev.status === 'Low Power' ? 'bg-orange-400' : 'bg-slate-500'
+                      }`}></span>
                     <span className={
-                      dev.status === 'Connected' ? 'text-emerald-400' : 
-                      dev.status === 'Low Power' ? 'text-orange-400' : 'text-slate-400'
+                      dev.status === 'Connected' ? 'text-emerald-400' :
+                        dev.status === 'Low Power' ? 'text-orange-400' : 'text-slate-400'
                     }>{dev.status}</span>
                   </div>
                 </td>
@@ -58,7 +51,7 @@ export function DevicesTable() {
                     Rename
                   </button>
                   <button className="text-slate-400 hover:text-rose-400 transition-colors" title="Delete Device">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
                   </button>
                 </td>
               </tr>
@@ -69,8 +62,8 @@ export function DevicesTable() {
       <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
         <span className="text-sm text-slate-400">Showing 1 to 5 of 1,284 devices</span>
         <div className="flex gap-2">
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg></button>
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg></button>
+          <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg></button>
         </div>
       </div>
     </div>

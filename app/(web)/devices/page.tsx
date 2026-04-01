@@ -1,7 +1,12 @@
+"use client";
+
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { DevicesTable } from "@/components/devices/devices-table";
+import { ExportButton } from "@/components/dashboard/export-button";
+import { useDevices } from "@/hooks/useDevices";
 
 export default function DevicesPage() {
+  const { devices, loading } = useDevices();
   return (
     <div className="min-h-screen bg-[#111827] flex font-sans">
       <Sidebar />
@@ -19,6 +24,7 @@ export default function DevicesPage() {
                 className="bg-[#242F41] text-sm text-white border border-slate-700/30 rounded-lg pl-9 pr-4 py-2 w-72 focus:outline-none focus:border-slate-500 placeholder:text-slate-500"
               />
             </div>
+            <ExportButton data={devices} filename="alerto_devices_export.csv" label="Export Data" />
             <button className="flex items-center gap-2 bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               + Add New Device
             </button>
@@ -60,7 +66,11 @@ export default function DevicesPage() {
           </div>
         </div>
 
-        <DevicesTable />
+        {loading ? (
+          <div className="flex justify-center items-center py-20 text-slate-400">Loading devices...</div>
+        ) : (
+          <DevicesTable devices={devices} />
+        )}
 
       </main>
     </div>

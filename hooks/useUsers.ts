@@ -42,6 +42,16 @@ export function useUsers() {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "Active" || tab === "Inactive" || tab === "All Users") {
+        setActiveTab(tab as UserStatus);
+      }
+    }
+  }, []);
+
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
       const matchesSearch = 

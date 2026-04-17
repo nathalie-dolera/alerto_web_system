@@ -19,6 +19,7 @@ model User {
   updatedAt   DateTime     @updatedAt
   savedPlaces SavedPlace[]
   userAlerts  UserAlert[]
+  trips       Trip[]
 }
 
 model SavedPlace {
@@ -83,4 +84,16 @@ model UserAlert {
   createdAt   DateTime @default(now())
   userId      String?  @db.ObjectId
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Trip {
+  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
+  date                   DateTime @default(now())
+  destinationName        String
+  durationMs             Int
+  alertsTriggeredCount   Int
+  responseTimes          Float[]
+  unsafeZonesEncountered String[]
+  userId                 String   @db.ObjectId
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

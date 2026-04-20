@@ -22,6 +22,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    if (admin.status === 'Inactive') {
+      return NextResponse.json({ error: 'Your account has been disabled. Please contact the administrator.' }, { status: 403 });
+    }
+
     const isPasswordValid = await bcrypt.compare(password, admin.password);
 
     if (!isPasswordValid) {

@@ -20,7 +20,14 @@ export async function POST(request: Request) {
                 googleId: googleId,
             }
         });
-
+        
+        if (user.status === 'Inactive') {
+            return NextResponse.json({
+                success: false,
+                error: 'Your account has been disabled. Please contact support.'
+            }, { status: 403 });
+        }
+ 
         return NextResponse.json ({
             success: true, 
             message: "User authenticated successfully",

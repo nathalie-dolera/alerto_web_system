@@ -32,7 +32,11 @@ export async function POST(request: NextRequest) {
         responseTimes, 
         unsafeZonesEncountered, 
         userId,
-        date 
+        date,
+        driverName,
+        plateNumber,
+        bookingType,
+        screenshotUrl 
     } = body;
 
     if (!userId) {
@@ -47,6 +51,10 @@ export async function POST(request: NextRequest) {
         responseTimes,
         unsafeZonesEncountered,
         userId,
+        driverName,
+        plateNumber,
+        bookingType,
+        screenshotUrl,
         date: date ? new Date(date) : new Date(),
       },
     });

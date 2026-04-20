@@ -13,7 +13,7 @@ export default function UsersPage() {
     users, totalUsers, searchQuery, setSearchQuery, 
     activeTab, setActiveTab, toggleUserStatus, deleteUser,
     currentUserRole, isAddModalOpen, setIsAddModalOpen, 
-    handleAddSubAdmin, addLoading, addError 
+    handleAddSubAdmin, addLoading, addError, loading, error 
   } = useUsers();
 
   return (
@@ -48,7 +48,7 @@ export default function UsersPage() {
 
         <div className="flex flex-col gap-4">
           <div className="flex gap-6 border-b border-slate-700/50 pb-2">
-            {(["All Users", "Active", "Inactive"] as const).map(tab => (
+            {(["All Users", "Active", "Inactive", "Disabled"] as const).map(tab => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -76,6 +76,7 @@ export default function UsersPage() {
           totalUsers={totalUsers}
           onToggleStatus={toggleUserStatus}
           onDelete={deleteUser}
+          loading={loading}
         />
       </main>
 

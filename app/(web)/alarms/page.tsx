@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { AlarmsTable } from "@/components/alarms/alarms-table";
 import { ExportButton } from "@/components/dashboard/export-button";
@@ -7,6 +8,10 @@ import { useAlarms } from "@/hooks/useAlarms";
 
 export default function AlarmsPage() {
   const { alarms, loading } = useAlarms();
+  useEffect(() => {
+    document.title = "Alerto | Alarm";
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#111827] flex font-sans">
       <Sidebar />

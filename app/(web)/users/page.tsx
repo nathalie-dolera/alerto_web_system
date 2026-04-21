@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { UsersTable } from "@/components/users/users-table";
 import { useUsers } from "@/hooks/useUsers";
@@ -15,6 +15,20 @@ export default function UsersPage() {
     currentUserRole, isAddModalOpen, setIsAddModalOpen, 
     handleAddSubAdmin, addLoading, addError, loading, error 
   } = useUsers();
+  
+  useEffect(() => {
+    document.title = "Alerto | User";
+  }, []);
+
+  const clearForm = () => {
+    setNewEmail("");
+    setNewPassword("");
+  };
+
+  const closeModal = () => {
+    setIsAddModalOpen(false);
+    clearForm();
+  };
 
   return (
     <div className="min-h-screen bg-[#111827] flex font-sans">
@@ -85,7 +99,7 @@ export default function UsersPage() {
           <div className="bg-[#1E293B] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-700/50">
             <div className="p-6 border-b border-slate-700/50 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Add Sub Admin</h2>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+              <button onClick={closeModal} className="text-slate-400 hover:text-white transition-colors">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -109,6 +123,7 @@ export default function UsersPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="off"
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="admin@example.com"
@@ -121,6 +136,7 @@ export default function UsersPage() {
                 <input
                   type="password"
                   required
+                  autoComplete="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="••••••••"
@@ -138,10 +154,17 @@ export default function UsersPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={closeModal}
                   className="bg-transparent hover:bg-slate-800 text-slate-300 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
                 >
                   Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={clearForm}
+                  className="mr-auto text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+                >
+                  Clear Form
                 </button>
               </div>
             </form>

@@ -1,10 +1,13 @@
+import { Metadata } from "next";
 import { getDashboardData } from "@/hooks/useDashboardData";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { UserTable } from "@/components/dashboard/user-table";
 import { ExportButton } from "@/components/dashboard/export-button";
 
-
+export const metadata: Metadata = {
+  title: "Alerto | Dashboard",
+};
 
 export default async function DashboardPage() {
   const dashboardData = await getDashboardData();

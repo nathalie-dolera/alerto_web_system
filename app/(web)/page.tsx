@@ -13,6 +13,7 @@ export default function AdminLogin() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    document.title = "Alerto | Login";
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };

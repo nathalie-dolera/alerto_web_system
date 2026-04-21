@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { DevicesTable } from "@/components/devices/devices-table";
 import { ExportButton } from "@/components/dashboard/export-button";
@@ -7,6 +8,11 @@ import { useDevices } from "@/hooks/useDevices";
 
 export default function DevicesPage() {
   const { devices, loading } = useDevices();
+  
+  useEffect(() => {
+    document.title = "Alerto | Device";
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#111827] flex font-sans">
       <Sidebar />

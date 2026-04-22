@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation"; 
 
 export default function AdminLogin() {
@@ -55,7 +57,7 @@ export default function AdminLogin() {
       } else {
         setError(data.error || "Login failed");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -67,19 +69,18 @@ export default function AdminLogin() {
       
       <div className="absolute top-8 left-8 flex items-center gap-4 cursor-pointer">
         <div className="relative w-14 h-14 overflow-hidden rounded-xl shadow-lg border border-slate-700/50 bg-[#1E293B]">
-          <img 
+          <Image 
             src="/alerto_logo1.png" 
             alt="Alerto Logo" 
+            width={56}
+            height={56}
             className="w-full h-full object-contain p-1"
-            onError={(e) => {
-               e.currentTarget.src = "/alerto_logo1.jpg.jpg";
-            }}
           />
         </div>
         <span className="text-white font-bold text-3xl tracking-wide">Alerto</span>
       </div>
 
-      <div className="bg-[#1E293B] p-8 rounded-2xl w-full max-w-[420px] shadow-2xl">
+      <div className="bg-[#1E293B] p-8 rounded-2xl w-full max-w-105 shadow-2xl">
         <h1 className="text-2xl font-bold text-white mb-1.5">Admin Login</h1>
         <p className="text-slate-400 text-sm mb-6">
           Please enter your credentials to manage the platform.
@@ -94,13 +95,14 @@ export default function AdminLogin() {
         <form className="space-y-5" onSubmit={handleLogin}>
           
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300">Email Address</label>
+            <label htmlFor="admin-email" className="text-xs font-semibold text-slate-300">Email Address</label>
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="16" x="2" y="4" rx="2"></rect>
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
               </svg>
               <input
+                id="admin-email"
                 type="email"
                 required
                 value={email}
@@ -113,10 +115,10 @@ export default function AdminLogin() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300">Password</label>
-              <a href="#" className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
+              <label htmlFor="admin-password" id="label-admin-password" className="text-xs font-semibold text-slate-300">Password</label>
+              <Link href="/forgot-password" title="Forgot password?" className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -124,6 +126,7 @@ export default function AdminLogin() {
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
               <input
+                id="admin-password"
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}

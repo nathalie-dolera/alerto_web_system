@@ -51,7 +51,8 @@ export async function GET() {
         status: admin.status || 'Active',
         isAdmin: true,
         alarmCount: 0,
-        tripCount: 0
+        tripCount: 0,
+        isOnline: true
       })),
       ...users.map(user => ({
         id: user.id,
@@ -62,7 +63,8 @@ export async function GET() {
         status: user.status || 'Active',
         isAdmin: false,
         alarmCount: user._count.savedPlaces + user._count.userAlerts,
-        tripCount: user._count.trips
+        tripCount: user._count.trips,
+        isOnline: user.isOnline
       }))
     ];
 

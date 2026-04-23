@@ -46,19 +46,31 @@ export default function AdminLogin() {
     try {
       const res = await fetch("/api/admin/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        console.error("Non-JSON response received:", text);
+        throw new Error("Server returned an unexpected response. Check console for details.");
+      }
 
       if (res.ok) {
         router.push("/dashboard"); 
       } else {
         setError(data.error || "Login failed");
       }
-    } catch {
-      setError("An error occurred. Please try again.");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err?.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }

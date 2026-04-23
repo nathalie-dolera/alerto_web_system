@@ -12,6 +12,7 @@ export interface User {
   isAdmin?: boolean;
   alarmCount?: number;
   tripCount?: number;
+  isOnline?: boolean;
 }
 
 export function useUsers() {
@@ -76,7 +77,7 @@ export function useUsers() {
         displayStatus = 'Disabled';
       } else if (!user.isAdmin) {
         // Commuters
-        displayStatus = ((user.alarmCount || 0) > 0 || (user.tripCount || 0) > 0) ? 'Active' : 'Inactive';
+        displayStatus = user.isOnline ? 'Active' : 'Inactive';
       } else {
         // Admins
         displayStatus = 'Active';

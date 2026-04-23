@@ -30,7 +30,7 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard title="Active Users" value={stats.activeUsers} type="users" href="/users?tab=Active" />
-          <StatCard title="Registered Users" value={stats.registeredUsers} type="registeredUsers" href="/users?tab=All%20Users" />
+          <StatCard title="Mobile Users" value={stats.registeredUsers} type="registeredUsers" href="/users?tab=All%20Users" />
           <StatCard title="Connected Devices" value={stats.connectedDevices} type="devices" href="/devices" />
           <StatCard title="Alarms Triggered" value={stats.alarmsTriggered} type="alarms" href="/alarms" />
         </div>

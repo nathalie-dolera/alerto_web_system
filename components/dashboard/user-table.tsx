@@ -22,7 +22,8 @@ export function UserTable({ users }: { users: UserConnection[] }) {
             <tr>
               <th className="px-6 py-4">USER NAME</th>
               <th className="px-6 py-4">DEVICE ID</th>
-              <th className="px-6 py-4">STATUS</th>
+              <th className="px-6 py-4">CONNECTION STATUS</th>
+              <th className="px-6 py-4">USER STATUS</th>
               <th className="px-6 py-4">LAST ACTIVE</th>
             </tr>
           </thead>
@@ -38,6 +39,15 @@ export function UserTable({ users }: { users: UserConnection[] }) {
                       {user.status}
                     </span>
                   </div>
+                </td>
+                <td className="px-6 py-5">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                    user.userStatus === 'Active' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 
+                    user.userStatus === 'Inactive' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 
+                    'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                  }`}>
+                    {user.userStatus}
+                  </span>
                 </td>
                 <td className="px-6 py-5 text-slate-400">{user.lastActive}</td>
               </tr>

@@ -50,7 +50,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
               if (user.status === 'Inactive') {
                 displayStatus = 'Disabled';
               } else if (!user.isAdmin) {
-                displayStatus = ((user.alarmCount || 0) > 0 || (user.tripCount || 0) > 0) ? 'Active' : 'Inactive';
+                displayStatus = user.isOnline ? 'Active' : 'Inactive';
               }
 
               return (

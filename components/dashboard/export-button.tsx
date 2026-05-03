@@ -25,7 +25,7 @@ export function ExportButton({ data, stats, users, filename, label = "Export Dat
   return (
     <button 
       onClick={handleExport}
-      className="flex items-center gap-2 bg-[#242F41] border border-slate-700/50 hover:bg-slate-700/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+      className="flex items-center gap-2 bg-white dark:bg-[#242F41] border border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
     >
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>

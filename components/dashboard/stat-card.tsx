@@ -42,16 +42,16 @@ export function StatCard({ title, value, type, href, description }: StatCardProp
 
   return (
     <Link href={href} className="block transition-transform hover:scale-[1.02] hover:-translate-y-1 duration-200">
-      <div className="bg-[#242F41] rounded-xl p-6 shadow-sm border border-slate-700/30 h-full flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#242F41] rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700/30 h-full flex flex-col justify-between transition-colors duration-200">
         <div>
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${config.bg} ${config.text}`}>
             {config.icon}
           </div>
-          <p className="text-sm text-slate-400 font-medium mb-1">{title}</p>
-          <h3 className="text-3xl font-bold text-white">{value}</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-1">{title}</p>
+          <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{value}</h3>
         </div>
         {description && (
-          <p className="text-xs text-slate-500 mt-4 leading-relaxed">{description}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 leading-relaxed">{description}</p>
         )}
       </div>
     </Link>

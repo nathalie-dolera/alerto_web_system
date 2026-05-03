@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, Suspense } from "react";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
   
@@ -73,28 +73,28 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] px-4 py-12 text-[#1E293B] font-sans">
-      <div className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl overflow-hidden relative">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#0B1120] px-4 py-12 text-slate-900 dark:text-white font-sans transition-colors duration-200">
+      <div className="mx-auto max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] p-8 shadow-xl overflow-hidden relative transition-colors duration-200">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-linear-to-r from-blue-600 to-blue-400"></div>
         
-        <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-blue-600 font-bold">
+        <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 font-bold">
           Alerto Reset Password
         </p>
-        <h1 className="text-3xl font-extrabold text-black tracking-tight">
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           New Password
         </h1>
-        <p className="mt-3 text-sm text-slate-600 leading-relaxed font-medium">
+        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
           Create a secure password for your Alerto account.
         </p>
 
         {error ? (
-          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 animate-in fade-in slide-in-from-top-1">
+          <div className="mt-6 rounded-2xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-200 animate-in fade-in slide-in-from-top-1">
             {error}
           </div>
         ) : null}
 
         {message ? (
-          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 animate-in fade-in slide-in-from-top-1">
+          <div className="mt-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-200 animate-in fade-in slide-in-from-top-1">
             {message}
           </div>
         ) : null}
@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="new-password" id="label-new-password" className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
+                <label htmlFor="new-password" id="label-new-password" className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">New Password</label>
                 <input
                   id="new-password"
                   type="password"
@@ -111,13 +111,13 @@ export default function ResetPasswordPage() {
                   onChange={(event) => setPassword(event.target.value)}
                   required
                   autoFocus
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0F172A] px-4 py-4 text-sm text-slate-900 dark:text-white outline-none transition-all focus:border-blue-500 focus:bg-white dark:focus:bg-[#1E293B] focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   placeholder="Create a strong password"
                 />
               </div>
 
               <div>
-                <label htmlFor="confirm-password" id="label-confirm-password" className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                <label htmlFor="confirm-password" id="label-confirm-password" className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Confirm Password
                 </label>
                 <input
@@ -126,14 +126,14 @@ export default function ResetPasswordPage() {
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   required
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0F172A] px-4 py-4 text-sm text-slate-900 dark:text-white outline-none transition-all focus:border-blue-500 focus:bg-white dark:focus:bg-[#1E293B] focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   placeholder="Repeat new password"
                 />
               </div>
             </div>
 
-            <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100 space-y-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 mb-2">
+            <div className="rounded-2xl bg-slate-50 dark:bg-[#1E293B] p-5 border border-slate-100 dark:border-slate-800 space-y-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 dark:text-slate-400 mb-2">
                 Security Checklist
               </p>
               
@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={!canSubmit}
-              className="w-full rounded-2xl bg-blue-600 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              className="w-full rounded-2xl bg-blue-600 dark:bg-blue-500 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-blue-700 dark:hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:shadow-none"
             >
               {loading ? "Updating Account..." : "Reset Password"}
             </button>
@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
             <div className="mt-8">
                 <button 
                     onClick={() => globalThis.window.location.href = "alertofrontendmobile://"}
-                    className="w-full rounded-2xl bg-slate-900 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 text-center shadow-lg hover:shadow-slate-500/20"
+                    className="w-full rounded-2xl bg-slate-900 dark:bg-slate-700 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 dark:hover:bg-slate-600 text-center shadow-lg hover:shadow-slate-500/20"
                 >
                     Open Alerto App
                 </button>
@@ -170,6 +170,18 @@ export default function ResetPasswordPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-slate-50 dark:bg-[#0B1120] px-4 py-12 text-slate-900 dark:text-white font-sans transition-colors duration-200 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </main>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
 
@@ -183,7 +195,7 @@ function Rule({ label, met }: Readonly<{ label: string; met: boolean }>) {
             </svg>
         )}
       </div>
-      <span className={`text-[11px] font-bold tracking-tight ${met ? "text-slate-700" : "text-slate-400"}`}>{label}</span>
+      <span className={`text-[11px] font-bold tracking-tight ${met ? "text-slate-700 dark:text-slate-300" : "text-slate-500 dark:text-slate-500"}`}>{label}</span>
     </div>
   );
 }

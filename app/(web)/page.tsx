@@ -77,10 +77,10 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] flex items-center justify-center relative font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] flex items-center justify-center relative font-sans transition-colors duration-200">
       
       <div className="absolute top-8 left-8 flex items-center gap-4 cursor-pointer">
-        <div className="relative w-14 h-14 overflow-hidden rounded-xl shadow-lg border border-slate-700/50 bg-[#1E293B]">
+        <div className="relative w-14 h-14 overflow-hidden rounded-xl shadow-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1E293B] transition-colors duration-200">
           <Image 
             src="/alerto_logo1.png" 
             alt="Alerto Logo" 
@@ -89,12 +89,12 @@ export default function AdminLogin() {
             className="w-full h-full object-contain p-1"
           />
         </div>
-        <span className="text-white font-bold text-3xl tracking-wide">Alerto</span>
+        <span className="text-slate-900 dark:text-white font-bold text-3xl tracking-wide">Alerto</span>
       </div>
 
-      <div className="bg-[#1E293B] p-8 rounded-2xl w-full max-w-105 shadow-2xl">
-        <h1 className="text-2xl font-bold text-white mb-1.5">Admin Login</h1>
-        <p className="text-slate-400 text-sm mb-6">
+      <div className="bg-white dark:bg-[#1E293B] p-8 rounded-2xl w-full max-w-105 shadow-2xl transition-colors duration-200 border border-slate-200 dark:border-slate-800">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1.5">Admin Login</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
           Please enter your credentials to manage the platform.
         </p>
 
@@ -107,7 +107,7 @@ export default function AdminLogin() {
         <form className="space-y-5" onSubmit={handleLogin}>
           
           <div className="space-y-2">
-            <label htmlFor="admin-email" className="text-xs font-semibold text-slate-300">Email Address</label>
+            <label htmlFor="admin-email" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="16" x="2" y="4" rx="2"></rect>
@@ -120,14 +120,14 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@commutewake.com"
-                className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-600 text-sm"
+                className="w-full bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-white border border-slate-200 dark:border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 text-sm"
               />
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="admin-password" id="label-admin-password" className="text-xs font-semibold text-slate-300">Password</label>
+              <label htmlFor="admin-password" id="label-admin-password" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
               <Link href="/forgot-password" title="Forgot password?" className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
                 Forgot password?
               </Link>
@@ -144,12 +144,12 @@ export default function AdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                className="w-full bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-white border border-slate-200 dark:border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 text-sm tracking-widest"
               />
               <button
                 type="button"
                 onClick={handleTogglePassword}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
               >
                 {showPassword ? (
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

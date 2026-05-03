@@ -31,14 +31,14 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111827] flex font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#111827] flex font-sans transition-colors duration-200">
       <Sidebar />
 
       <main className="flex-1 p-8 overflow-auto">
         <header className="flex items-start justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
-            <p className="text-slate-400">Manage and monitor system access for all registered users.</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">User Management</h1>
+            <p className="text-slate-500 dark:text-slate-400">Manage and monitor system access for all registered users.</p>
           </div>
           <div className="flex items-center gap-3">
             {currentUserRole === 'super-admin' && (
@@ -52,7 +52,7 @@ export default function UsersPage() {
             )}
             <button 
               onClick={() => downloadCSV(users, "alerto_users_export.csv")}
-              className="flex items-center gap-2 bg-[#242F41] border border-slate-700/50 hover:bg-slate-700/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-2 bg-white dark:bg-[#242F41] border border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export Data
@@ -61,12 +61,12 @@ export default function UsersPage() {
         </header>
 
         <div className="flex flex-col gap-4">
-          <div className="flex gap-6 border-b border-slate-700/50 pb-2">
+          <div className="flex gap-6 border-b border-slate-200 dark:border-slate-700/50 pb-2">
             {(["All Users", "Active", "Inactive", "Disabled"] as const).map(tab => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`transition-colors font-medium pb-2 -mb-[9px] ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-slate-400 hover:text-white'}`}
+                className={`transition-colors font-medium pb-2 -mb-[9px] ${activeTab === tab ? 'text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
               >
                 {tab}
               </button>
@@ -74,13 +74,13 @@ export default function UsersPage() {
           </div>
 
           <div className="relative mt-4">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, email or role..." 
-              className="bg-[#242F41] text-sm text-white border border-slate-700/30 rounded-lg pl-9 pr-4 py-3 w-full focus:outline-none focus:border-slate-500 placeholder:text-slate-500"
+              className="bg-white dark:bg-[#242F41] text-sm text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700/30 rounded-lg pl-9 pr-4 py-3 w-full focus:outline-none focus:border-blue-500 dark:focus:border-slate-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
             />
           </div>
         </div>
@@ -96,10 +96,10 @@ export default function UsersPage() {
 
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1E293B] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-700/50">
-            <div className="p-6 border-b border-slate-700/50 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Add Sub Admin</h2>
-              <button onClick={closeModal} className="text-slate-400 hover:text-white transition-colors">
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 transition-colors duration-200">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Sub Admin</h2>
+              <button onClick={closeModal} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -119,7 +119,7 @@ export default function UsersPage() {
               )}
               
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">Email Address</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
                 <input
                   type="email"
                   required
@@ -127,12 +127,12 @@ export default function UsersPage() {
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="admin@example.com"
-                  className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm"
+                  className="w-full bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">Password</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
                 <input
                   type="password"
                   required
@@ -140,7 +140,7 @@ export default function UsersPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                  className="w-full bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 text-sm tracking-widest"
                 />
               </div>
 
@@ -155,14 +155,14 @@ export default function UsersPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="bg-transparent hover:bg-slate-800 text-slate-300 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  className="bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={clearForm}
-                  className="mr-auto text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+                  className="mr-auto text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs font-medium transition-colors"
                 >
                   Clear Form
                 </button>

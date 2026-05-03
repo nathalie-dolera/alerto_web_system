@@ -8,9 +8,10 @@ interface UsersTableProps {
   onToggleStatus: (id: string) => void;
   onDelete: (id: string) => void;
   loading?: boolean;
+  onUpdatePassword?: (user: User) => void;
 }
 
-export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loading }: UsersTableProps) {
+export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loading, onUpdatePassword }: UsersTableProps) {
   if (loading) {
     return (
       <div className="bg-[#242F41] rounded-xl border border-slate-700/30 p-12 flex flex-col items-center justify-center mt-6">
@@ -45,7 +46,6 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
           </thead>
           <tbody className="divide-y divide-slate-700/30">
             {users.map((user) => {
-              // Compute display status
               let displayStatus = 'Active';
               if (user.status === 'Inactive') {
                 displayStatus = 'Disabled';
@@ -77,24 +77,57 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
                       }>{displayStatus}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 flex items-center justify-center gap-3">
-                    <button 
-                      onClick={() => onToggleStatus(user.id)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
-                        user.status === 'Active' 
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20' 
-                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                      }`}
-                    >
-                      {user.status === 'Active' ? 'Restrict Access' : 'Allow Access'}
-                    </button>
-                    <button 
-                      onClick={() => onDelete(user.id)}
-                      className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-all" 
-                      title="Delete User"
-                    >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                    </button>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-2">
+                      
+                      <button 
+                        onClick={() => onToggleStatus(user.id)}
+                        className={`h-[32px] w-[120px] flex items-center justify-center text-xs font-semibold rounded-lg border transition-all ${
+                          user.status === 'Active' 
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20' 
+                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                        }`}
+                      >
+                        {user.status === 'Active' ? 'Restrict Access' : 'Allow Access'}
+                      </button>
+
+                      <div className="relative group flex items-center justify-center">
+                        <button 
+                          onClick={() => onDelete(user.id)}
+                          className="h-[32px] w-[32px] flex items-center justify-center rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-all" 
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none px-2.5 py-1 bg-slate-800 text-xs font-medium text-slate-200 rounded-md whitespace-nowrap shadow-xl border border-slate-700/50 z-10">
+                          Delete user
+                        </div>
+                      </div>
+
+                      {(user.role === 'Sub Admin' || user.role === 'System Admin') ? (
+                        <div className="relative group flex items-center justify-center">
+                          <button 
+                            onClick={() => {
+                              if (onUpdatePassword) {
+                                onUpdatePassword(user);
+                              }
+                            }}
+                            className="h-[32px] w-[32px] flex items-center justify-center rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-all" 
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/>
+                              <path d="m21 2-9.6 9.6"/>
+                              <circle cx="7.5" cy="15.5" r="5.5"/>
+                            </svg>
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none px-2.5 py-1 bg-slate-800 text-xs font-medium text-slate-200 rounded-md whitespace-nowrap shadow-xl border border-slate-700/50 z-10">
+                            Update password
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-[32px]"></div>
+                      )}
+
+                    </div>
                   </td>
                 </tr>
               );

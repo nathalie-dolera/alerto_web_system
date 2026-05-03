@@ -8,6 +8,28 @@ export interface TomTomIncident {
   severity: string;
 }
 
+export interface TomTomRoutePoint {
+  lat: number;
+  lng: number;
+}
+
+export interface TomTomTrafficSection {
+  startPointIndex: number;
+  endPointIndex: number;
+  delayInSeconds: number;
+  effectiveSpeedInKmh?: number;
+  magnitudeOfDelay?: number;
+}
+
+export interface TomTomRoutePlan {
+  points: TomTomRoutePoint[];
+  distanceMeters: number;
+  travelTimeSeconds: number;
+  trafficDelaySeconds: number;
+  trafficLengthMeters: number;
+  trafficSections: TomTomTrafficSection[];
+}
+
 export async function fetchTomTomIncidents(): Promise<TomTomIncident[]> {
   const apiKey = env.TOMTOM_API_KEY;
   if (!apiKey) {
@@ -86,5 +108,79 @@ export async function fetchTomTomIncidents(): Promise<TomTomIncident[]> {
   } catch (error) {
     console.error('Error fetching TomTom data across Philippines:', error);
     return [];
+  }
+}
+
+export async function fetchTomTomRoute(
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number
+): Promise<TomTomRoutePlan | null> {
+  const apiKey = env.TOMTOM_API_KEY;
+  if (!apiKey) {
+    console.warn('TomTom API key is missing. Skipping TomTom route request.');
+    return null;
+  }
+
+  try {
+    const url = new URL(
+      `https://api.tomtom.com/routing/1/calculateRoute/${fromLat},${fromLng}:${toLat},${toLng}/json`
+    );
+    url.searchParams.set('key', apiKey);
+    url.searchParams.set('traffic', 'true');
+    url.searchParams.set('travelMode', 'car');
+    url.searchParams.set('routeType', 'fastest');
+    url.searchParams.set('computeTravelTimeFor', 'all');
+    url.searchParams.append('sectionType', 'traffic');
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      console.warn(`TomTom route API responded with status ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const route = data?.routes?.[0];
+    const leg = route?.legs?.[0];
+    const summary = route?.summary;
+    const rawPoints = leg?.points;
+
+    if (!route || !summary || !Array.isArray(rawPoints) || rawPoints.length === 0) {
+      return null;
+    }
+
+    return {
+      points: rawPoints.map((point: { latitude: number; longitude: number }) => ({
+        lat: point.latitude,
+        lng: point.longitude,
+      })),
+      distanceMeters: Number(summary.lengthInMeters || 0),
+      travelTimeSeconds: Number(summary.travelTimeInSeconds || 0),
+      trafficDelaySeconds: Number(summary.trafficDelayInSeconds || 0),
+      trafficLengthMeters: Number(summary.trafficLengthInMeters || 0),
+      trafficSections: Array.isArray(leg.sections)
+        ? leg.sections
+            .filter((section: { sectionType?: string }) => section.sectionType === 'TRAFFIC')
+            .map(
+              (section: {
+                startPointIndex: number;
+                endPointIndex: number;
+                delayInSeconds?: number;
+                effectiveSpeedInKmh?: number;
+                magnitudeOfDelay?: number;
+              }) => ({
+                startPointIndex: section.startPointIndex,
+                endPointIndex: section.endPointIndex,
+                delayInSeconds: Number(section.delayInSeconds || 0),
+                effectiveSpeedInKmh: section.effectiveSpeedInKmh,
+                magnitudeOfDelay: section.magnitudeOfDelay,
+              })
+            )
+        : [],
+    };
+  } catch (error) {
+    console.error('Error fetching TomTom route:', error);
+    return null;
   }
 }

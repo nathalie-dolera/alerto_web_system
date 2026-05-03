@@ -13,7 +13,7 @@ model User {
   password    String?
   name        String?
   image       String?
-  googleId    String?      @unique
+  googleId    String?
   role        String?      @default("USER")
   status      String       @default("Active")
   resetPasswordToken   String?
@@ -101,6 +101,15 @@ model Trip {
   alertsTriggeredCount   Int
   responseTimes          Float[]
   unsafeZonesEncountered String[]
+  safetyStatus           String   @default("Normal")
+  anomalyCount           Int      @default(0)
+  anomalyTriggers        String[]
+  suspiciousAt           DateTime?
+  sosTriggeredAt         DateTime?
+  lastKnownLat           Float?
+  lastKnownLng           Float?
+  routeRecognitionStatus String   @default("Planned Route")
+  routeRefreshCount      Int      @default(0)
   driverName             String?
   plateNumber            String?
   bookingType            String?

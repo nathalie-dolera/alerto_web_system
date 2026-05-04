@@ -11,13 +11,21 @@ export async function POST(req: Request) {
     const { token, password } = await req.json();
 
     if (!token || typeof token !== "string") {
-      return NextResponse.json({ error: "Reset token is required" }, { status: 400 });
+      return NextResponse.json({
+        error: "Reset token is required" 
+      }, {
+        status: 400 
+      });
     }
 
     if (!password || typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
       return NextResponse.json(
-        { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` },
-        { status: 400 }
+        {
+          error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` 
+        },
+        {
+          status: 400 
+        }
       );
     }
 
@@ -26,18 +34,26 @@ export async function POST(req: Request) {
     const user = await prisma.user.findFirst({
       where: {
         resetPasswordToken: hashedToken,
-        resetPasswordExpires: { gt: new Date() },
+        resetPasswordExpires: {
+          gt: new Date() 
+        },
       },
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Invalid or expired reset token" }, { status: 400 });
+      return NextResponse.json({
+        error: "Invalid or expired reset token" 
+      }, {
+        status: 400 
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await prisma.user.update({
-      where: { id: user.id },
+      where: {
+        id: user.id 
+      },
       data: {
         password: hashedPassword,
         resetPasswordToken: null,
@@ -52,6 +68,10 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Reset password API error:", error);
 
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({
+      error: "Internal Server Error" 
+    }, {
+      status: 500 
+    });
   }
 }

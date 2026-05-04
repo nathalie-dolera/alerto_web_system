@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 async function main() {
   // Find all users
   const users = await prisma.user.findMany();
-  
+
   // Update each user to explicitly set status to 'Active'
   for (const user of users) {
     if (user.status === 'Active') {
@@ -14,9 +14,9 @@ async function main() {
       });
     }
   }
-  
+
   console.log('Database updated successfully.');
-  
+
   console.log('All Users:', await prisma.user.count());
   console.log('Status Active Users:', await prisma.user.count({ where: { status: 'Active' } }));
 }

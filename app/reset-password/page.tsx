@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -51,8 +50,13 @@ export default function ResetPasswordPage() {
     try {
       const response = await fetch("/api/mobile/auth/reset-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        headers: {
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify({
+          token,
+          password 
+        }),
       });
 
       const data = await response.json();
@@ -158,14 +162,14 @@ export default function ResetPasswordPage() {
         )}
 
         {message && (
-            <div className="mt-8">
-                <button 
-                    onClick={() => globalThis.window.location.href = "alertofrontendmobile://"}
-                    className="w-full rounded-2xl bg-slate-900 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 text-center shadow-lg hover:shadow-slate-500/20"
-                >
-                    Open Alerto App
-                </button>
-            </div>
+          <div className="mt-8">
+            <button 
+              onClick={() => globalThis.window.location.href = "alertofrontendmobile://"}
+              className="w-full rounded-2xl bg-slate-900 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 text-center shadow-lg hover:shadow-slate-500/20"
+            >
+              Open Alerto App
+            </button>
+          </div>
         )}
 
       </div>
@@ -173,14 +177,15 @@ export default function ResetPasswordPage() {
   );
 }
 
-function Rule({ label, met }: Readonly<{ label: string; met: boolean }>) {
+function Rule({ label, met }: Readonly<{ label: string;
+  met: boolean }>) {
   return (
     <div className={`flex items-center space-x-3 transition-all duration-300 ${met ? "opacity-100" : "opacity-40"}`}>
       <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${met ? "bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/20" : "bg-transparent border-slate-300"}`}>
         {met && (
-            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
         )}
       </div>
       <span className={`text-[11px] font-bold tracking-tight ${met ? "text-slate-700" : "text-slate-400"}`}>{label}</span>

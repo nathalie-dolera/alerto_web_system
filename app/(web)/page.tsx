@@ -50,7 +50,10 @@ export default function AdminLogin() {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "69420"
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password 
+        }),
       });
 
       let data;

@@ -15,9 +15,17 @@ export async function GET() {
     const trips = await prisma.trip.findMany({
       where: {
         OR: [
-          { anomalyCount: { gt: 0 } },
-          { safetyStatus: 'Suspicious' },
-          { safetyStatus: 'SOS-Triggered' },
+          {
+            anomalyCount: {
+              gt: 0 
+            } 
+          },
+          {
+            safetyStatus: 'Suspicious' 
+          },
+          {
+            safetyStatus: 'SOS-Triggered' 
+          },
         ],
       },
       include: {
@@ -29,9 +37,15 @@ export async function GET() {
         },
       },
       orderBy: [
-        { sosTriggeredAt: 'desc' },
-        { suspiciousAt: 'desc' },
-        { date: 'desc' },
+        {
+          sosTriggeredAt: 'desc' 
+        },
+        {
+          suspiciousAt: 'desc' 
+        },
+        {
+          date: 'desc' 
+        },
       ],
       take: 100,
     });
@@ -58,9 +72,15 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ alarms });
+    return NextResponse.json({
+      alarms 
+    });
   } catch (error) {
     console.error('Admin alarms fetch error:', error);
-    return NextResponse.json({ error: 'Failed to fetch alarms' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Failed to fetch alarms' 
+    }, {
+      status: 500 
+    });
   }
 }

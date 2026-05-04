@@ -17,7 +17,9 @@ export function downloadCSV(data: any[], filename: string) {
   }
 
   const csvString = csvRows.join('\n');
-  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csvString], {
+    type: 'text/csv;charset=utf-8;' 
+  });
   
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -52,7 +54,9 @@ export function downloadDashboardReport(stats: any, users: any[], filename: stri
     }
   }
 
-  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csvString], {
+    type: 'text/csv;charset=utf-8;' 
+  });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

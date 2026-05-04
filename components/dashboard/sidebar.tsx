@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 
 export function Sidebar() {
   const pathname = usePathname(); 
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ email: string;
+    role: string } | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -37,7 +38,7 @@ export function Sidebar() {
             alt="Alerto Logo" 
             className="w-full h-full object-contain p-1"
             onError={(e) => {
-               e.currentTarget.src = "/alerto_logo1.jpg.jpg";
+              e.currentTarget.src = "/alerto_logo1.jpg.jpg";
             }}
           />
         </div>

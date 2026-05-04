@@ -11,35 +11,64 @@ export async function POST(request: Request) {
     const { email, password } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+      return NextResponse.json({
+        error: 'Email and password are required' 
+      }, {
+        status: 400 
+      });
     }
 
     const admin = await prisma.admin.findUnique({
-      where: { email },
+      where: {
+        email 
+      },
     });
 
     if (!admin) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({
+        error: 'Invalid email or password' 
+      }, {
+        status: 401 
+      });
     }
 
     if (admin.status === 'Inactive') {
-      return NextResponse.json({ error: 'Your account has been disabled. Please contact the administrator.' }, { status: 403 });
+      return NextResponse.json({
+        error: 'Your account has been disabled. Please contact the administrator.' 
+      }, {
+        status: 403 
+      });
     }
 
     const isPasswordValid = await bcrypt.compare(password, admin.password);
 
     if (!isPasswordValid) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({
+        error: 'Invalid email or password' 
+      }, {
+        status: 401 
+      });
     }
 
     // Create JWT token
     const token = jwt.sign(
-      { id: admin.id, email: admin.email, role: admin.role },
+      {
+        id: admin.id,
+        email: admin.email,
+        role: admin.role 
+      },
       JWT_SECRET,
-      { expiresIn: '1d' }
+      {
+        expiresIn: '1d' 
+      }
     );
 
-    const response = NextResponse.json({ success: true, message: 'Logged in successfully' }, { status: 200 });
+    const response = NextResponse.json({
+      success: true,
+      message: 'Logged in successfully' 
+    }, {
+      status: 200 
+    });
     response.cookies.set('adminAuthToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -51,6 +80,10 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Internal server error' 
+    }, {
+      status: 500 
+    });
   }
 }

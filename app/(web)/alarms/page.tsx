@@ -27,11 +27,11 @@ export default function AlarmsPage() {
         </header>
 
         <div className="flex gap-6 border-b border-slate-700/50 mb-6">
-          <button className="flex items-center gap-2 text-slate-400 hover:text-white font-medium pb-3 -mb-[1px]">
+          <button className="flex items-center gap-2 text-slate-400 hover:text-white font-medium pb-3 -mb-px">
             Active Alarms
             <span className="bg-slate-700 text-white text-[10px] px-2 py-0.5 rounded-full">{activeAlarmCount}</span>
           </button>
-          <button className="text-blue-500 border-b-2 border-blue-500 font-medium pb-3 -mb-[1px]">
+          <button className="text-blue-500 border-b-2 border-blue-500 font-medium pb-3 -mb-px">
             Alarm History
           </button>
         </div>

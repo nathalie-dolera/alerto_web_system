@@ -30,7 +30,9 @@ export function DevicesTable({ devices }: { devices: any[] }) {
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                      <div className={`h-full ${dev.batColor}`} style={{ width: `${dev.battery}%` }}></div>
+                      <div className={`h-full ${dev.batColor}`} style={{
+                        width: `${dev.battery}%` 
+                      }}></div>
                     </div>
                     <span className="text-white font-medium w-8">{dev.battery}%</span>
                   </div>
@@ -38,8 +40,8 @@ export function DevicesTable({ devices }: { devices: any[] }) {
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${dev.status === 'Connected' ? 'bg-emerald-400' :
-                        dev.status === 'Low Power' ? 'bg-orange-400' : 'bg-slate-500'
-                      }`}></span>
+                      dev.status === 'Low Power' ? 'bg-orange-400' : 'bg-slate-500'
+                    }`}></span>
                     <span className={
                       dev.status === 'Connected' ? 'text-emerald-400' :
                         dev.status === 'Low Power' ? 'text-orange-400' : 'text-slate-400'

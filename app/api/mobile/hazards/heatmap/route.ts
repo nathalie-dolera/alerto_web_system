@@ -23,15 +23,15 @@ export async function GET(request: Request) {
 
     const geoFilter = hasBounds
       ? {
-          lat: {
-            gte: south,
-            lte: north,
-          },
-          lng: {
-            gte: west,
-            lte: east,
-          },
-        }
+        lat: {
+          gte: south,
+          lte: north,
+        },
+        lng: {
+          gte: west,
+          lte: east,
+        },
+      }
       : {};
 
     const [history, userAlerts] = await Promise.all([
@@ -81,9 +81,15 @@ export async function GET(request: Request) {
           : DEFAULT_CLUSTER_SIZE_METERS,
     });
 
-    return NextResponse.json(heatmapPoints, { status: 200 });
+    return NextResponse.json(heatmapPoints, {
+      status: 200 
+    });
   } catch (error) {
     console.error('Error generating risk heatmap:', error);
-    return NextResponse.json({ error: 'Failed to generate risk heatmap' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Failed to generate risk heatmap' 
+    }, {
+      status: 500 
+    });
   }
 }

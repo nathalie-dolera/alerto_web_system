@@ -26,7 +26,9 @@ async function fetchAllRSSDescriptions(): Promise<string> {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      const response = await fetch(url.replace('http:', 'https:'), { signal: controller.signal });
+      const response = await fetch(url.replace('http:', 'https:'), {
+        signal: controller.signal 
+      });
       clearTimeout(timeoutId);
 
       if (!response.ok) continue;
@@ -68,7 +70,9 @@ export async function fetchAIProcessedIncidents(): Promise<AIIncident[]> {
       return [];
     }
 
-    const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+    const ai = new GoogleGenAI({
+      apiKey: geminiApiKey 
+    });
     const prompt = `
     Analyze the following recent news and traffic advisories from the Philippines.
     Identify any active traffic incidents, accidents, hazards, road closures, or floods.

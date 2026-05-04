@@ -8,17 +8,18 @@ export function createPasswordResetToken() {
   const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
   const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
 
-  return { rawToken, hashedToken, expiresAt };
+  return {
+    rawToken,
+    hashedToken,
+    expiresAt 
+  };
 }
 
 export function hashPasswordResetToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-function appendToken(url: string, token: string) {
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}token=${encodeURIComponent(token)}`;
-}
+
 
 export function getWebPasswordResetUrl(token: string) {
   const baseUrl =

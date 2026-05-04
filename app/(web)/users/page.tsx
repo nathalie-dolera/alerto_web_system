@@ -13,7 +13,7 @@ export default function UsersPage() {
     users, totalUsers, searchQuery, setSearchQuery, 
     activeTab, setActiveTab, toggleUserStatus, deleteUser,
     currentUserRole, isAddModalOpen, setIsAddModalOpen, 
-    handleAddSubAdmin, addLoading, addError, loading, error 
+    handleAddSubAdmin, addLoading, addError, loading 
   } = useUsers();
   
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function UsersPage() {
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`transition-colors font-medium pb-2 -mb-[9px] ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-slate-400 hover:text-white'}`}
+                className={`transition-colors font-medium pb-2 -mb-2.25 ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-slate-400 hover:text-white'}`}
               >
                 {tab}
               </button>

@@ -11,9 +11,11 @@ async function getAuthorizedUser() {
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { email: string, role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string,
+      role: string };
     return decoded;
   } catch (error) {
+    console.error('JWT verification failed:', error);
     return null;
   }
 }
@@ -26,42 +28,92 @@ export async function PATCH(
   try {
     const adminUser = await getAuthorizedUser();
     if (!adminUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({
+        error: 'Unauthorized' 
+      }, {
+        status: 401 
+      });
     }
 
     const { id } = await params;
+
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return NextResponse.json({
+        error: 'Invalid user ID format' 
+      }, {
+        status: 400 
+      });
+    }
     const { status } = await request.json();
 
     if (!status) {
-      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+      return NextResponse.json({
+        error: 'Status is required' 
+      }, {
+        status: 400 
+      });
     }
 
-    const admin = await prisma.admin.findUnique({ where: { id } });
+    const admin = await prisma.admin.findUnique({
+      where: {
+        id 
+      } 
+    });
     if (admin) {
       if (admin.role === 'super-admin' && adminUser.role !== 'super-admin') {
-        return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+        return NextResponse.json({
+          error: 'Insufficient permissions' 
+        }, {
+          status: 403 
+        });
       }
 
       await prisma.admin.update({
-        where: { id },
-        data: { status }
+        where: {
+          id 
+        },
+        data: {
+          status 
+        }
       });
-      return NextResponse.json({ success: true, message: 'Admin status updated' });
+      return NextResponse.json({
+        success: true,
+        message: 'Admin status updated' 
+      });
     }
 
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({
+      where: {
+        id 
+      } 
+    });
     if (user) {
       await prisma.user.update({
-        where: { id },
-        data: { status }
+        where: {
+          id 
+        },
+        data: {
+          status 
+        }
       });
-      return NextResponse.json({ success: true, message: 'User status updated' });
+      return NextResponse.json({
+        success: true,
+        message: 'User status updated' 
+      });
     }
 
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return NextResponse.json({
+      error: 'User not found' 
+    }, {
+      status: 404 
+    });
   } catch (error) {
     console.error('Update status error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Internal server error' 
+    }, {
+      status: 500 
+    });
   }
 }
 
@@ -72,34 +124,84 @@ export async function DELETE(
   try {
     const adminUser = await getAuthorizedUser();
     if (!adminUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({
+        error: 'Unauthorized' 
+      }, {
+        status: 401 
+      });
     }
 
     if (adminUser.role !== 'super-admin') {
-      return NextResponse.json({ error: 'Unauthorized. Only super-admins can delete users.' }, { status: 403 });
+      return NextResponse.json({
+        error: 'Unauthorized. Only super-admins can delete users.' 
+      }, {
+        status: 403 
+      });
     }
 
     const { id } = await params;
 
-    const admin = await prisma.admin.findUnique({ where: { id } });
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return NextResponse.json({
+        error: 'Invalid user ID format' 
+      }, {
+        status: 400 
+      });
+    }
+
+    const admin = await prisma.admin.findUnique({
+      where: {
+        id 
+      } 
+    });
     if (admin) {
       if (admin.email === adminUser.email) {
-        return NextResponse.json({ error: 'You cannot delete yourself' }, { status: 400 });
+        return NextResponse.json({
+          error: 'You cannot delete yourself' 
+        }, {
+          status: 400 
+        });
       }
 
-      await prisma.admin.delete({ where: { id } });
-      return NextResponse.json({ success: true, message: 'Admin deleted' });
+      await prisma.admin.delete({
+        where: {
+          id 
+        } 
+      });
+      return NextResponse.json({
+        success: true,
+        message: 'Admin deleted' 
+      });
     }
 
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({
+      where: {
+        id 
+      } 
+    });
     if (user) {
-      await prisma.user.delete({ where: { id } });
-      return NextResponse.json({ success: true, message: 'User deleted' });
+      await prisma.user.delete({
+        where: {
+          id 
+        } 
+      });
+      return NextResponse.json({
+        success: true,
+        message: 'User deleted' 
+      });
     }
 
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return NextResponse.json({
+      error: 'User not found' 
+    }, {
+      status: 404 
+    });
   } catch (error) {
     console.error('Delete user error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Internal server error' 
+    }, {
+      status: 500 
+    });
   }
 }

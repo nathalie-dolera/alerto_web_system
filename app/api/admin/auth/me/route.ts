@@ -10,10 +10,15 @@ export async function GET() {
     const token = cookieStore.get('adminAuthToken')?.value;
 
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({
+        error: 'Unauthorized' 
+      }, {
+        status: 401 
+      });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { email: string, role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string,
+      role: string };
     
     return NextResponse.json({
       user: {
@@ -21,7 +26,11 @@ export async function GET() {
         role: decoded.role,
       }
     });
-  } catch (error) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch {
+    return NextResponse.json({
+      error: 'Unauthorized' 
+    }, {
+      status: 401 
+    });
   }
 }

@@ -11,9 +11,10 @@ async function getAuthorizedUser() {
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { email: string, role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string,
+      role: string };
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -23,22 +24,34 @@ export async function GET() {
     const adminUser = await getAuthorizedUser();
 
     if (!adminUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({
+        error: 'Unauthorized' 
+      }, {
+        status: 401 
+      });
     }
 
     //fetch all users, commuters
     const users = await prisma.user.findMany({
       include: {
         _count: {
-          select: { savedPlaces: true, trips: true, userAlerts: true }
+          select: {
+            savedPlaces: true,
+            trips: true,
+            userAlerts: true 
+          }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: {
+        createdAt: 'desc' 
+      }
     });
 
     //fetch all admins, admin
     const admins = await prisma.admin.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: {
+        createdAt: 'desc' 
+      }
     });
 
     const formattedUsers = [
@@ -47,7 +60,11 @@ export async function GET() {
         name: admin.email.split('@')[0],
         email: admin.email,
         role: admin.role === 'super-admin' ? 'System Admin' : 'Sub Admin',
-        joinDate: admin.createdAt.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        joinDate: admin.createdAt.toLocaleDateString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric' 
+        }),
         status: admin.status || 'Active',
         isAdmin: true,
         alarmCount: 0,
@@ -59,7 +76,11 @@ export async function GET() {
         name: user.name || user.email.split('@')[0],
         email: user.email,
         role: 'Commuter',
-        joinDate: user.createdAt.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        joinDate: user.createdAt.toLocaleDateString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric' 
+        }),
         status: user.status || 'Active',
         isAdmin: false,
         alarmCount: user._count.savedPlaces + user._count.userAlerts,
@@ -71,6 +92,10 @@ export async function GET() {
     return NextResponse.json(formattedUsers);
   } catch (error) {
     console.error('Fetch users error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Internal server error' 
+    }, {
+      status: 500 
+    });
   }
 }

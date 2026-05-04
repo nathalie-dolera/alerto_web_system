@@ -2,47 +2,47 @@
 
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useForm, watch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validationSchemas";
+import { FieldError, SuccessMessage } from "@/components/FormErrors";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
   
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch: watchForm,
+  } = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
+    mode: "onChange",
+  });
+
+  const password = watchForm("password");
+  
+  // Password strength rules for display
   const rules = {
-    length: password.length >= 8,
-    upper: /[A-Z]/.test(password),
-    lower: /[a-z]/.test(password),
-    number: /\d/.test(password),
-    symbol: /[!@#$%^&*(),.?":{}|<>\-_]/.test(password),
-    match: password === confirmPassword && password.length > 0,
+    length: password?.length >= 8,
+    upper: /[A-Z]/.test(password || ""),
+    lower: /[a-z]/.test(password || ""),
+    number: /\d/.test(password || ""),
+    symbol: /[!@#$%^&*(),.?":{}|<>\-_]/.test(password || ""),
   };
 
-  const isPasswordStrong = rules.length && rules.upper && rules.lower && rules.number && rules.symbol;
-  const canSubmit = isPasswordStrong && rules.match && !loading;
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = async (data: ResetPasswordInput) => {
     setError("");
     setMessage("");
 
     if (!token) {
       setError("This reset link is missing its token.");
-      return;
-    }
-
-    if (!isPasswordStrong) {
-      setError("Please ensure your password meets all the security requirements below.");
-      return;
-    }
-
-    if (!rules.match) {
-      setError("Passwords do not match.");
       return;
     }
 
@@ -52,19 +52,17 @@ export default function ResetPasswordPage() {
       const response = await fetch("/api/mobile/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password: data.password }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Unable to reset password.");
+        setError(responseData.error || "Unable to reset password.");
         return;
       }
 
       setMessage("Success! Your password has been updated. You can now log in to the Alerto app.");
-      setPassword("");
-      setConfirmPassword("");
     } catch {
       setError("Unable to reset password due to a connection error.");
     } finally {
@@ -94,26 +92,25 @@ export default function ResetPasswordPage() {
         ) : null}
 
         {message ? (
-          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 animate-in fade-in slide-in-from-top-1">
-            {message}
-          </div>
+          <SuccessMessage message={message} />
         ) : null}
 
         {!message && (
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <div>
                 <label htmlFor="new-password" id="label-new-password" className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
                 <input
                   id="new-password"
                   type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  autoFocus
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300"
                   placeholder="Create a strong password"
+                  autoFocus
+                  {...register("password")}
+                  className={`w-full rounded-2xl border ${
+                    errors.password ? "border-red-300" : "border-slate-200"
+                  } bg-slate-50 px-4 py-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300`}
                 />
+                {errors.password && <FieldError error={errors.password.message} />}
               </div>
 
               <div>
@@ -123,12 +120,13 @@ export default function ResetPasswordPage() {
                 <input
                   id="confirm-password"
                   type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  required
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300"
                   placeholder="Repeat new password"
+                  {...register("confirmPassword")}
+                  className={`w-full rounded-2xl border ${
+                    errors.confirmPassword ? "border-red-300" : "border-slate-200"
+                  } bg-slate-50 px-4 py-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300`}
                 />
+                {errors.confirmPassword && <FieldError error={errors.confirmPassword.message} />}
               </div>
             </div>
 
@@ -143,13 +141,13 @@ export default function ResetPasswordPage() {
                 <Rule label="Lowercase Letter" met={rules.lower} />
                 <Rule label="A Number" met={rules.number} />
                 <Rule label="Special Symbol" met={rules.symbol} />
-                <Rule label="Passwords Match" met={rules.match} />
+                <Rule label="Passwords Match" met={!errors.confirmPassword} />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={!canSubmit}
+              disabled={loading}
               className="w-full rounded-2xl bg-blue-600 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
               {loading ? "Updating Account..." : "Reset Password"}

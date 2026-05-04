@@ -1,33 +1,51 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { UsersTable } from "@/components/users/users-table";
 import { useUsers } from "@/hooks/useUsers";
 import { downloadCSV } from "@/lib/exportUtils";
+import { addSubAdminSchema, type AddSubAdminInput } from "@/lib/validationSchemas";
+import { FieldError } from "@/components/FormErrors";
 
 export default function UsersPage() {
-  const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const { 
     users, totalUsers, searchQuery, setSearchQuery, 
     activeTab, setActiveTab, toggleUserStatus, deleteUser,
     currentUserRole, isAddModalOpen, setIsAddModalOpen, 
     handleAddSubAdmin, addLoading, addError, loading, error 
   } = useUsers();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<AddSubAdminInput>({
+    resolver: zodResolver(addSubAdminSchema),
+    mode: "onBlur",
+  });
   
   useEffect(() => {
     document.title = "Alerto | User";
   }, []);
 
   const clearForm = () => {
-    setNewEmail("");
-    setNewPassword("");
+    reset();
   };
 
   const closeModal = () => {
     setIsAddModalOpen(false);
-    clearForm();
+    reset();
+  };
+
+  const onSubmit = async (data: AddSubAdminInput) => {
+    const success = await handleAddSubAdmin(data.email, data.password);
+    if (success) {
+      reset();
+    }
   };
 
   return (
@@ -104,14 +122,7 @@ export default function UsersPage() {
               </button>
             </div>
             
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const success = await handleAddSubAdmin(newEmail, newPassword);
-              if (success) {
-                setNewEmail("");
-                setNewPassword("");
-              }
-            }} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
               {addError && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
                   {addError}
@@ -122,26 +133,42 @@ export default function UsersPage() {
                 <label className="text-xs font-semibold text-slate-300">Email Address</label>
                 <input
                   type="email"
-                  required
                   autoComplete="off"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="admin@example.com"
-                  className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm"
+                  {...register("email")}
+                  className={`w-full bg-[#0F172A] text-white border ${
+                    errors.email ? "border-red-500" : "border-slate-700/50"
+                  } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm`}
                 />
+                {errors.email && <FieldError error={errors.email.message} />}
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">Password</label>
                 <input
                   type="password"
-                  required
                   autoComplete="new-password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                  {...register("password")}
+                  className={`w-full bg-[#0F172A] text-white border ${
+                    errors.password ? "border-red-500" : "border-slate-700/50"
+                  } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
                 />
+                {errors.password && <FieldError error={errors.password.message} />}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-300">Confirm Password</label>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  {...register("confirmPassword")}
+                  className={`w-full bg-[#0F172A] text-white border ${
+                    errors.confirmPassword ? "border-red-500" : "border-slate-700/50"
+                  } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
+                />
+                {errors.confirmPassword && <FieldError error={errors.confirmPassword.message} />}
               </div>
 
               <div className="pt-4 flex gap-3 flex-row-reverse">

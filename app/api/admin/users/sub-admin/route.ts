@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { addSubAdminSchema, validateInput, formatValidationError } from '@/lib/validationSchemas';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'alerto-admin-secret-key-for-jwt';
@@ -30,11 +31,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized. Only super-admins can perform this action.' }, { status: 403 });
     }
 
-    const { email, password } = await request.json();
+    const body = await request.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    // Validate input with zod schema
+    const validation = validateInput(addSubAdminSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: formatValidationError(validation.errors!) },
+        { status: 400 }
+      );
     }
+
+    const { email, password } = validation.data;
 
     const existingAdmin = await prisma.admin.findUnique({
       where: { email },
@@ -42,6 +50,22 @@ export async function POST(request: Request) {
 
     if (existingAdmin) {
       return NextResponse.json({ error: 'An admin with this email already exists' }, { status: 409 });
+    }
+
+    // Validate password strength on server
+    const passwordRules = {
+      length: password.length >= 8,
+      upper: /[A-Z]/.test(password),
+      lower: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      symbol: /[!@#$%^&*(),.?":{}|<>\-_]/.test(password),
+    };
+
+    const isPasswordStrong = Object.values(passwordRules).every(rule => rule === true);
+    if (!isPasswordStrong) {
+      return NextResponse.json({
+        error: 'Password does not meet security requirements. Must include uppercase, lowercase, number, and special character.'
+      }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

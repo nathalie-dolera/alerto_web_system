@@ -69,11 +69,11 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${
                         displayStatus === 'Active' ? 'bg-emerald-400' : 
-                        displayStatus === 'Disabled' ? 'bg-rose-500' : 'bg-slate-500'
+                          displayStatus === 'Disabled' ? 'bg-rose-500' : 'bg-slate-500'
                       }`}></span>
                       <span className={
                         displayStatus === 'Active' ? 'text-emerald-400' : 
-                        displayStatus === 'Disabled' ? 'text-rose-400' : 'text-slate-400'
+                          displayStatus === 'Disabled' ? 'text-rose-400' : 'text-slate-400'
                       }>{displayStatus}</span>
                     </div>
                   </td>

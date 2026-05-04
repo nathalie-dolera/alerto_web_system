@@ -75,8 +75,8 @@ export async function fetchTomTomIncidents(): Promise<TomTomIncident[]> {
       const response = await fetch(url);
       
       if (!response.ok) {
-         console.warn(`TomTom API responded with status ${response.status} for bbox ${bbox}`);
-         continue;
+        console.warn(`TomTom API responded with status ${response.status} for bbox ${bbox}`);
+        continue;
       }
       const data = await response.json();
       const incidentsList = data.incidents || [];
@@ -151,7 +151,8 @@ export async function fetchTomTomRoute(
     }
 
     return {
-      points: rawPoints.map((point: { latitude: number; longitude: number }) => ({
+      points: rawPoints.map((point: { latitude: number;
+        longitude: number }) => ({
         lat: point.latitude,
         lng: point.longitude,
       })),
@@ -161,22 +162,22 @@ export async function fetchTomTomRoute(
       trafficLengthMeters: Number(summary.trafficLengthInMeters || 0),
       trafficSections: Array.isArray(leg.sections)
         ? leg.sections
-            .filter((section: { sectionType?: string }) => section.sectionType === 'TRAFFIC')
-            .map(
-              (section: {
-                startPointIndex: number;
-                endPointIndex: number;
-                delayInSeconds?: number;
-                effectiveSpeedInKmh?: number;
-                magnitudeOfDelay?: number;
-              }) => ({
-                startPointIndex: section.startPointIndex,
-                endPointIndex: section.endPointIndex,
-                delayInSeconds: Number(section.delayInSeconds || 0),
-                effectiveSpeedInKmh: section.effectiveSpeedInKmh,
-                magnitudeOfDelay: section.magnitudeOfDelay,
-              })
-            )
+          .filter((section: { sectionType?: string }) => section.sectionType === 'TRAFFIC')
+          .map(
+            (section: {
+              startPointIndex: number;
+              endPointIndex: number;
+              delayInSeconds?: number;
+              effectiveSpeedInKmh?: number;
+              magnitudeOfDelay?: number;
+            }) => ({
+              startPointIndex: section.startPointIndex,
+              endPointIndex: section.endPointIndex,
+              delayInSeconds: Number(section.delayInSeconds || 0),
+              effectiveSpeedInKmh: section.effectiveSpeedInKmh,
+              magnitudeOfDelay: section.magnitudeOfDelay,
+            })
+          )
         : [],
     };
   } catch (error) {

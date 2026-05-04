@@ -3,14 +3,14 @@ import { UserConnection } from "@/hooks/useDashboardData";
 export function UserTable({ users }: { users: UserConnection[] }) {
   return (
     <div className="bg-[#242F41] rounded-xl border border-slate-700/30 overflow-hidden flex flex-col mt-6">
-      
+
       <div className="p-6 flex items-center justify-between border-b border-slate-700/30">
         <h2 className="text-lg font-semibold text-white">User Connection Status</h2>
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input 
-            type="text" 
-            placeholder="Search users..." 
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+          <input
+            type="text"
+            placeholder="Search users..."
             className="bg-[#1B2435] text-sm text-white border border-slate-700/50 rounded-lg pl-9 pr-4 py-2 w-64 focus:outline-none focus:border-slate-500 placeholder:text-slate-500"
           />
         </div>
@@ -41,11 +41,10 @@ export function UserTable({ users }: { users: UserConnection[] }) {
                   </div>
                 </td>
                 <td className="px-6 py-5">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                    user.userStatus === 'Active' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 
-                    user.userStatus === 'Inactive' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 
-                    'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-                  }`}>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${user.userStatus === 'Active' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                      user.userStatus === 'Inactive' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                        'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                    }`}>
                     {user.userStatus}
                   </span>
                 </td>
@@ -60,10 +59,10 @@ export function UserTable({ users }: { users: UserConnection[] }) {
         <span className="text-sm text-slate-400">Showing 1-4 of 12,840 users</span>
         <div className="flex gap-2">
           <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
           </button>
           <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
           </button>
         </div>
       </div>

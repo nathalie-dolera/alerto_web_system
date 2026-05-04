@@ -35,7 +35,9 @@ export async function sendPasswordResetEmail({
     body: JSON.stringify({
       personalizations: [
         {
-          to: [{ email }],
+          to: [{
+            email 
+          }],
           subject: "Reset your Alerto password",
         },
       ],

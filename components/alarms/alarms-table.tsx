@@ -36,9 +36,9 @@ export function AlarmsTable({ alarms }: { alarms: any[] }) {
                 <td className="px-6 py-5 text-slate-400">{alarm.time}</td>
                 <td className="px-6 py-5">
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-medium ${alarm.status === 'Pending'
-                      ? 'border-orange-500/30 text-orange-400 bg-orange-500/10'
-                      : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
-                    }`}>
+                    ? 'border-orange-500/30 text-orange-400 bg-orange-500/10'
+                    : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                  }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${alarm.status === 'Pending' ? 'bg-orange-400' : 'bg-emerald-400'}`}></span>
                     {alarm.status}
                   </span>

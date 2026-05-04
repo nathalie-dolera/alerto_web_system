@@ -10,16 +10,28 @@ export async function GET(
     const id = (await params).id;
 
     const place = await prisma.savedPlace.findUnique({
-      where: { id },
+      where: {
+        id 
+      },
     });
 
     if (!place) {
-      return NextResponse.json({ error: 'Place not found' }, { status: 404 });
+      return NextResponse.json({
+        error: 'Place not found' 
+      }, {
+        status: 404 
+      });
     }
 
-    return NextResponse.json(place, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch place' }, { status: 500 });
+    return NextResponse.json(place, {
+      status: 200 
+    });
+  } catch {
+    return NextResponse.json({
+      error: 'Failed to fetch place' 
+    }, {
+      status: 500 
+    });
   }
 }
 
@@ -35,7 +47,9 @@ export async function PUT(
     const { name, lat, lng, distance, intensity, duration } = body;
 
     const updatedPlace = await prisma.savedPlace.update({
-      where: { id },
+      where: {
+        id 
+      },
       data: {
         name,
         lat,
@@ -46,9 +60,15 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedPlace, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update place' }, { status: 500 });
+    return NextResponse.json(updatedPlace, {
+      status: 200 
+    });
+  } catch {
+    return NextResponse.json({
+      error: 'Failed to update place' 
+    }, {
+      status: 500 
+    });
   }
 }
 
@@ -61,11 +81,19 @@ export async function DELETE(
     const id = (await params).id;
 
     await prisma.savedPlace.delete({
-      where: { id },
+      where: {
+        id 
+      },
     });
 
-    return new NextResponse(null, { status: 204 }); 
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete place' }, { status: 500 });
+    return new NextResponse(null, {
+      status: 204 
+    }); 
+  } catch {
+    return NextResponse.json({
+      error: 'Failed to delete place' 
+    }, {
+      status: 500 
+    });
   }
 }

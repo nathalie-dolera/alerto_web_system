@@ -19,13 +19,21 @@ export async function GET(request: NextRequest) {
   const toLng = Number(request.nextUrl.searchParams.get('toLng'));
 
   if (![fromLat, fromLng, toLat, toLng].every(Number.isFinite)) {
-    return NextResponse.json({ error: 'Valid route coordinates are required' }, { status: 400 });
+    return NextResponse.json({
+      error: 'Valid route coordinates are required' 
+    }, {
+      status: 400 
+    });
   }
 
   try {
     const route = await fetchTomTomRoute(fromLat, fromLng, toLat, toLng);
     if (!route) {
-      return NextResponse.json({ error: 'Unable to calculate route' }, { status: 502 });
+      return NextResponse.json({
+        error: 'Unable to calculate route' 
+      }, {
+        status: 502 
+      });
     }
 
     const trafficSegments = route.trafficSections.map((section, index) => {
@@ -52,6 +60,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Mobile routes error:', error);
-    return NextResponse.json({ error: 'Failed to fetch route plan' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Failed to fetch route plan' 
+    }, {
+      status: 500 
+    });
   }
 }

@@ -7,17 +7,31 @@ export async function GET(request: NextRequest) {
     const userId = request.nextUrl.searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json({
+        error: 'User ID is required' 
+      }, {
+        status: 400 
+      });
     }
 
     const places = await prisma.savedPlace.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' }, 
+      where: {
+        userId 
+      },
+      orderBy: {
+        createdAt: 'desc' 
+      }, 
     });
     
-    return NextResponse.json(places, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch saved places' }, { status: 500 });
+    return NextResponse.json(places, {
+      status: 200 
+    });
+  } catch {
+    return NextResponse.json({
+      error: 'Failed to fetch saved places' 
+    }, {
+      status: 500 
+    });
   }
 }
 
@@ -28,7 +42,11 @@ export async function POST(request: NextRequest) {
     const { name, lat, lng, distance, intensity, duration, userId } = body;
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json({
+        error: 'User ID is required' 
+      }, {
+        status: 400 
+      });
     }
 
     const newPlace = await prisma.savedPlace.create({
@@ -43,8 +61,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(newPlace, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to save place' }, { status: 500 });
+    return NextResponse.json(newPlace, {
+      status: 201 
+    });
+  } catch {
+    return NextResponse.json({
+      error: 'Failed to save place' 
+    }, {
+      status: 500 
+    });
   }
 }

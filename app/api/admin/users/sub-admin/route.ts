@@ -14,10 +14,11 @@ async function getAuthorizedUser() {
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { email: string, role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string,
+      role: string };
     if (decoded.role !== 'super-admin') return null;
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -27,21 +28,35 @@ export async function POST(request: Request) {
     const user = await getAuthorizedUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized. Only super-admins can perform this action.' }, { status: 403 });
+      return NextResponse.json({
+        error: 'Unauthorized. Only super-admins can perform this action.' 
+      }, {
+        status: 403 
+      });
     }
 
     const { email, password } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+      return NextResponse.json({
+        error: 'Email and password are required' 
+      }, {
+        status: 400 
+      });
     }
 
     const existingAdmin = await prisma.admin.findUnique({
-      where: { email },
+      where: {
+        email 
+      },
     });
 
     if (existingAdmin) {
-      return NextResponse.json({ error: 'An admin with this email already exists' }, { status: 409 });
+      return NextResponse.json({
+        error: 'An admin with this email already exists' 
+      }, {
+        status: 409 
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,11 +72,21 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Sub admin created successfully',
-      admin: { id: subAdmin.id, email: subAdmin.email, role: subAdmin.role }
-    }, { status: 201 });
+      admin: {
+        id: subAdmin.id,
+        email: subAdmin.email,
+        role: subAdmin.role 
+      }
+    }, {
+      status: 201 
+    });
 
   } catch (error) {
     console.error('Sub admin creation error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Internal server error' 
+    }, {
+      status: 500 
+    });
   }
 }

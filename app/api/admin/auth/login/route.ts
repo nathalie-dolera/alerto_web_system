@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     });
 
     if (!admin) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Your email is incorrect' }, { status: 401 });
     }
 
     if (admin.status === 'Inactive') {
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const isPasswordValid = await bcrypt.compare(password, admin.password);
 
     if (!isPasswordValid) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Your password is incorrect' }, { status: 401 });
     }
 
     // Create JWT token

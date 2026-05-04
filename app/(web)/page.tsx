@@ -9,6 +9,7 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter(); 
@@ -36,10 +37,29 @@ export default function AdminLogin() {
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!email || !password) {
-      setError("Please put email and password.");
+    
+    const errors: { email?: string; password?: string } = {};
+    if (!email.trim()) {
+      errors.email = "Please enter your email address.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Please enter a valid email address.";
+    } else {
+      const domain = email.split('@')[1]?.toLowerCase();
+      const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'commutewake.com'];
+      if (!allowedDomains.includes(domain)) {
+        errors.email = "Incorrect domain format";
+      }
+    }
+
+    if (!password.trim()) {
+      errors.password = "Please enter your password.";
+    }
+    
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
       return;
     }
+    
     setError("");
     setLoading(true);
 
@@ -99,30 +119,36 @@ export default function AdminLogin() {
         </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center">
-            {error}
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center flex items-start gap-2 justify-center">
+            <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>{error}</span>
           </div>
         )}
 
-        <form className="space-y-5" onSubmit={handleLogin}>
+        <form className="space-y-5" onSubmit={handleLogin} noValidate>
           
           <div className="space-y-2">
             <label htmlFor="admin-email" className="text-xs font-semibold text-slate-300">Email Address</label>
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${fieldErrors.email ? 'text-red-400' : 'text-slate-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="16" x="2" y="4" rx="2"></rect>
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
               </svg>
               <input
                 id="admin-email"
                 type="email"
-                required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: undefined });
+                }}
                 placeholder="admin@commutewake.com"
-                className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-600 text-sm"
+                className={`w-full bg-[#0F172A] text-white border ${fieldErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-transparent focus:border-blue-500 focus:ring-blue-500'} focus:ring-1 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-600 text-sm`}
               />
             </div>
+            {fieldErrors.email && (
+              <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -133,18 +159,20 @@ export default function AdminLogin() {
               </Link>
             </div>
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${fieldErrors.password ? 'text-red-400' : 'text-slate-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
               <input
                 id="admin-password"
                 type={showPassword ? "text" : "password"}
-                required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: undefined });
+                }}
                 placeholder="••••••••"
-                className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                className={`w-full bg-[#0F172A] text-white border ${fieldErrors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-transparent focus:border-blue-500 focus:ring-blue-500'} focus:ring-1 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
               />
               <button
                 type="button"
@@ -166,6 +194,9 @@ export default function AdminLogin() {
                 )}
               </button>
             </div>
+            {fieldErrors.password && (
+              <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           

@@ -3,16 +3,31 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { adminLoginSchema, type AdminLoginInput } from "@/lib/validationSchemas";
+import { FormErrors, FieldError } from "@/components/FormErrors"; 
 
 export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter(); 
+  const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<AdminLoginInput>({
+    resolver: zodResolver(adminLoginSchema),
+    mode: "onBlur",
+  });
+
+  const email = watch("email");
+  const password = watch("password");
 
   useEffect(() => {
     document.title = "Alerto | Login";
@@ -34,12 +49,7 @@ export default function AdminLogin() {
     }
   };
 
-  const handleLogin = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!email || !password) {
-      setError("Please put email and password.");
-      return;
-    }
+  const handleLogin = async (data: AdminLoginInput) => {
     setError("");
     setLoading(true);
 
@@ -50,13 +60,13 @@ export default function AdminLogin() {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "69420"
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(data),
       });
 
-      let data;
+      let responseData;
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await res.json();
+        responseData = await res.json();
       } else {
         const text = await res.text();
         console.error("Non-JSON response received:", text);
@@ -66,7 +76,7 @@ export default function AdminLogin() {
       if (res.ok) {
         router.push("/dashboard"); 
       } else {
-        setError(data.error || "Login failed");
+        setError(responseData.error || "Login failed");
       }
     } catch (err: any) {
       console.error("Login error:", err);
@@ -104,7 +114,10 @@ export default function AdminLogin() {
           </div>
         )}
 
-        <form className="space-y-5" onSubmit={handleLogin}>
+        <form className="space-y-5" onSubmit={handleSubmit(handleLogin)}>
+          {Object.keys(errors).length > 0 && (
+            <FormErrors errors={Object.keys(errors).length > 0 ? undefined : undefined} />
+          )}
           
           <div className="space-y-2">
             <label htmlFor="admin-email" className="text-xs font-semibold text-slate-300">Email Address</label>
@@ -116,13 +129,14 @@ export default function AdminLogin() {
               <input
                 id="admin-email"
                 type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@commutewake.com"
-                className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-600 text-sm"
+                {...register("email")}
+                className={`w-full bg-[#0F172A] text-white border ${
+                  errors.email ? "border-red-500" : "border-transparent"
+                } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-slate-600 text-sm`}
               />
             </div>
+            {errors.email && <FieldError error={errors.email.message} />}
           </div>
 
           <div className="space-y-2">
@@ -140,11 +154,11 @@ export default function AdminLogin() {
               <input
                 id="admin-password"
                 type={showPassword ? "text" : "password"}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#0F172A] text-white border border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                {...register("password")}
+                className={`w-full bg-[#0F172A] text-white border ${
+                  errors.password ? "border-red-500" : "border-transparent"
+                } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 pl-10 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
               />
               <button
                 type="button"
@@ -166,6 +180,7 @@ export default function AdminLogin() {
                 )}
               </button>
             </div>
+            {errors.password && <FieldError error={errors.password.message} />}
           </div>
 
           

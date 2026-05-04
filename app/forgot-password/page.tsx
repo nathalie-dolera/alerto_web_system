@@ -2,15 +2,26 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validationSchemas";
+import { FieldError, SuccessMessage } from "@/components/FormErrors";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: "onBlur",
+  });
+
+  const onSubmit = async (data: ForgotPasswordInput) => {
     setLoading(true);
     setError("");
     setMessage("");
@@ -19,17 +30,17 @@ export default function ForgotPasswordPage() {
       const response = await fetch("/api/mobile/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Unable to send reset link.");
+        setError(responseData.error || "Unable to send reset link.");
         return;
       }
 
-      setMessage(data.message || "Check your email for your password reset link.");
+      setMessage(responseData.message || "Check your email for your password reset link.");
     } catch {
       setError("Unable to send reset link.");
     } finally {
@@ -53,23 +64,22 @@ export default function ForgotPasswordPage() {
         ) : null}
 
         {message ? (
-          <div className="mt-6 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            {message}
-          </div>
+          <SuccessMessage message={message} />
         ) : null}
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-300">Email</label>
             <input
               id="email"
               type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-700 bg-[#0F172A] px-4 py-3 text-sm outline-none transition focus:border-blue-500"
               placeholder="name@example.com"
+              {...register("email")}
+              className={`w-full rounded-lg border ${
+                errors.email ? "border-red-500" : "border-slate-700"
+              } bg-[#0F172A] px-4 py-3 text-sm outline-none transition focus:border-blue-500`}
             />
+            {errors.email && <FieldError error={errors.email.message} />}
           </div>
 
           <button

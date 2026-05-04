@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 "use client";
 
 import Link from "next/link";
@@ -6,6 +7,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validationSchemas";
 import { FieldError, SuccessMessage } from "@/components/FormErrors";
+
+export const metadata: Metadata = {
+  title: "Alerto | Forgot Password",
+  description: "Reset your admin password",
+};
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);

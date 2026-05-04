@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 "use client";
 
 import Link from "next/link";
@@ -7,6 +8,11 @@ import { useForm, watch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validationSchemas";
 import { FieldError, SuccessMessage } from "@/components/FormErrors";
+
+export const metadata: Metadata = {
+  title: "Alerto | Reset Password",
+  description: "Reset your admin account password",
+};
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();

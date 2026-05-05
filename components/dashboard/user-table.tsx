@@ -18,7 +18,7 @@ export function UserTable({
   return (
     <div className="w-full bg-[#1e2330] rounded-lg border border-slate-700/50 overflow-hidden">
       
-      {/* Table Header & Search */}
+      {}
       <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
         <h2 className="text-lg font-semibold text-white">User Connection Status</h2>
         <div className="relative">
@@ -33,7 +33,7 @@ export function UserTable({
         </div>
       </div>
 
-      {/* Table Body */}
+      {}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm text-slate-400">
           <thead className="text-xs uppercase bg-[#1e2330] border-b border-slate-700/50 text-slate-300 font-semibold">
@@ -85,10 +85,10 @@ export function UserTable({
         </table>
       </div>
 
-      {/* Table Footer */}
+      {}
       <div className="flex items-center justify-between px-6 py-4 bg-[#1e2330]">
         
-        {/* Your Exact Requested Format */}
+        {}
         <div className="text-sm text-slate-400">
           {currentPage}/{pageCount} of {overallUsers} users
         </div>

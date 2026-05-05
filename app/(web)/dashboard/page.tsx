@@ -13,22 +13,18 @@ export default async function DashboardPage() {
   const dashboardData = await getDashboardData();
   const { stats, users } = dashboardData ?? {};
 
-  // 1. Safely extract the array of users
   const usersData = users as any;
   const allUsers = Array.isArray(usersData) ? usersData : (usersData?.items || []);
 
-  // 2. Dynamically grab ALL users who are Commuters (case-insensitive)
   const commuters = allUsers.filter((user: any) => 
     user?.role?.toLowerCase() === "commuter"
   );
 
-  // 3. Set up dynamic pagination math based on the TOTAL number of commuters
   const overallUsers = commuters.length;
   const perPage = 10;
   const currentPage = 1; 
   const pageCount = Math.max(1, Math.ceil(overallUsers / perPage));
   
-  // 4. Pass the correct slice of users to the table
   const itemsToShow = commuters.slice(0, perPage);
 
   return (

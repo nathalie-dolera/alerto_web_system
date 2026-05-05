@@ -9,6 +9,7 @@ import { downloadCSV } from "@/lib/exportUtils";
 export default function UsersPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const { 
     users, totalUsers, searchQuery, setSearchQuery, 
     activeTab, setActiveTab, toggleUserStatus, deleteUser,
@@ -23,6 +24,7 @@ export default function UsersPage() {
   const clearForm = () => {
     setNewEmail("");
     setNewPassword("");
+    setFieldErrors({});
   };
 
   const closeModal = () => {
@@ -106,15 +108,39 @@ export default function UsersPage() {
             
             <form onSubmit={async (e) => {
               e.preventDefault();
+              
+              const errors: { email?: string; password?: string } = {};
+              if (!newEmail.trim()) {
+                errors.email = "Please enter an email address.";
+              } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                errors.email = "Please enter a valid email address.";
+              } else {
+                const domain = newEmail.split('@')[1]?.toLowerCase();
+                const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'commutewake.com'];
+                if (!allowedDomains.includes(domain)) {
+                  errors.email = "Incorrect domain format";
+                }
+              }
+              if (!newPassword.trim()) {
+                errors.password = "Please enter a password.";
+              } else if (newPassword.length < 8) {
+                errors.password = "Password must be at least 8 characters long.";
+              }
+              
+              setFieldErrors(errors);
+              if (Object.keys(errors).length > 0) {
+                return;
+              }
+
               const success = await handleAddSubAdmin(newEmail, newPassword);
               if (success) {
-                setNewEmail("");
-                setNewPassword("");
+                clearForm();
               }
-            }} className="p-6 space-y-4">
+            }} className="p-6 space-y-4" noValidate>
               {addError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
-                  {addError}
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-start gap-2">
+                  <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>{addError}</span>
                 </div>
               )}
               
@@ -122,26 +148,36 @@ export default function UsersPage() {
                 <label className="text-xs font-semibold text-slate-300">Email Address</label>
                 <input
                   type="email"
-                  required
                   autoComplete="off"
                   value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
+                  onChange={(e) => {
+                    setNewEmail(e.target.value);
+                    if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: undefined });
+                  }}
                   placeholder="admin@example.com"
-                  className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm"
+                  className={`w-full bg-[#0F172A] text-white border ${fieldErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-700/50 focus:border-blue-500 focus:ring-blue-500'} focus:ring-1 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm`}
                 />
+                {fieldErrors.email && (
+                  <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">Password</label>
                 <input
                   type="password"
-                  required
                   autoComplete="new-password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: undefined });
+                  }}
                   placeholder="••••••••"
-                  className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                  className={`w-full bg-[#0F172A] text-white border ${fieldErrors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-700/50 focus:border-blue-500 focus:ring-blue-500'} focus:ring-1 rounded-lg py-2.5 px-4 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
                 />
+                {fieldErrors.password && (
+                  <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>
+                )}
               </div>
 
               <div className="pt-4 flex gap-3 flex-row-reverse">
@@ -161,7 +197,11 @@ export default function UsersPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={clearForm}
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to clear?")) {
+                      clearForm();
+                    }
+                  }}
                   className="mr-auto text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
                 >
                   Clear Form

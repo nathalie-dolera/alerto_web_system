@@ -45,7 +45,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
           </thead>
           <tbody className="divide-y divide-slate-700/30">
             {users.map((user) => {
-              // Compute display status
+              
               let displayStatus = 'Active';
               if (user.status === 'Inactive') {
                 displayStatus = 'Disabled';

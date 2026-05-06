@@ -6,7 +6,7 @@ export function UserTable({ users }: { users: UserConnection[] }) {
       
       <div className="p-6 flex items-center justify-between border-b border-slate-700/30">
         <h2 className="text-lg font-semibold text-white">User Connection Status</h2>
-        <div className="relative">
+        <div className="relative print:hidden">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input 
             type="text" 
@@ -56,7 +56,7 @@ export function UserTable({ users }: { users: UserConnection[] }) {
         </table>
       </div>
 
-      <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
+      <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41] print:hidden">
         <span className="text-sm text-slate-400">Showing 1-4 of 12,840 users</span>
         <div className="flex gap-2">
           <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white transition-colors">

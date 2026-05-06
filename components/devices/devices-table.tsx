@@ -14,7 +14,7 @@ export function DevicesTable({ devices }: { devices: any[] }) {
               <th className="px-6 py-4">LAST PING</th>
               <th className="px-6 py-4">BATTERY LEVEL</th>
               <th className="px-6 py-4">CONNECTION</th>
-              <th className="px-6 py-4 text-center">MANAGE</th>
+              <th className="px-6 py-4 text-center print:hidden">MANAGE</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/30">
@@ -46,7 +46,7 @@ export function DevicesTable({ devices }: { devices: any[] }) {
                     }>{dev.status}</span>
                   </div>
                 </td>
-                <td className="px-6 py-5 flex items-center justify-center gap-4">
+                <td className="px-6 py-5 flex items-center justify-center gap-4 print:hidden">
                   <button className="text-xs font-medium text-slate-400 hover:text-white transition-colors" title="Rename Device">
                     Rename
                   </button>
@@ -59,7 +59,7 @@ export function DevicesTable({ devices }: { devices: any[] }) {
           </tbody>
         </table>
       </div>
-      <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
+      <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41] print:hidden">
         <span className="text-sm text-slate-400">Showing 1 to 5 of 1,284 devices</span>
         <div className="flex gap-2">
           <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg></button>

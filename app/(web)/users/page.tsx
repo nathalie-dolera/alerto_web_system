@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { UsersTable } from "@/components/users/users-table";
 import { useUsers } from "@/hooks/useUsers";
-import { downloadCSV } from "@/lib/exportUtils";
+import { ExportButton } from "@/components/dashboard/export-button";
 
 export default function UsersPage() {
   const [newEmail, setNewEmail] = useState("");
@@ -40,27 +40,24 @@ export default function UsersPage() {
             <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
             <p className="text-slate-400">Manage and monitor system access for all registered users.</p>
           </div>
-          <div className="flex items-center gap-3">
+         <div className="flex items-center gap-3">
             {currentUserRole === 'super-admin' && (
               <button 
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors print:hidden"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
                 Add Sub Admin
               </button>
             )}
-            <button 
-              onClick={() => downloadCSV(users, "alerto_users_export.csv")}
-              className="flex items-center gap-2 bg-[#242F41] border border-slate-700/50 hover:bg-slate-700/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export Data
-            </button>
+            <ExportButton 
+              data={users} 
+              filename="alerto_users_export.csv" 
+            />
           </div>
         </header>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 print:hidden">
           <div className="flex gap-6 border-b border-slate-700/50 pb-2">
             {(["All Users", "Active", "Inactive", "Disabled"] as const).map(tab => (
               <button 

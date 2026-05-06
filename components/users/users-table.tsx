@@ -40,7 +40,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
               <th className="px-6 py-4">ROLE</th>
               <th className="px-6 py-4">JOIN DATE</th>
               <th className="px-6 py-4">STATUS</th>
-              <th className="px-6 py-4 text-center">MANAGE</th>
+              <th className="px-6 py-4 text-center print:hidden">MANAGE</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/30">
@@ -77,7 +77,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
                       }>{displayStatus}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 flex items-center justify-center gap-3">
+                  <td className="px-6 py-4 flex items-center justify-center gap-3 print:hidden">
                     <button 
                       onClick={() => onToggleStatus(user.id)}
                       className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
@@ -102,7 +102,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
           </tbody>
         </table>
       </div>
-      <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
+      <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41] print:hidden">
         <span className="text-sm text-slate-400">Showing {users.length > 0 ? 1 : 0} to {users.length} of {totalUsers} users</span>
         <div className="flex gap-2">
           <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg></button>

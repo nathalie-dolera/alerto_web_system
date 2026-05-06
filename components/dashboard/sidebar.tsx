@@ -28,7 +28,7 @@ export function Sidebar() {
   const initial = displayName !== "Loading..." && displayName.length > 0 ? displayName.charAt(0).toUpperCase() : "-";
 
   return (
-    <aside className="w-64 bg-[#1B2435] border-r border-slate-700/30 flex flex-col h-screen sticky top-0">
+    <aside className="w-64 bg-[#1B2435] border-r border-slate-700/30 flex flex-col h-screen sticky top-0 print:hidden">
       
       <div className="h-24 flex items-center px-6 gap-3 cursor-pointer hover:bg-slate-700/10 transition-colors">
         <div className="relative w-14 h-14 shrink-0 overflow-hidden rounded-xl shadow-lg border border-slate-700/50 bg-[#1E293B]">

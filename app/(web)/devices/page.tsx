@@ -21,8 +21,8 @@ export default function DevicesPage() {
         <header className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-white">Device Management</h1>
           
-          <div className="flex items-center gap-4">
-            <div className="relative">
+        <div className="flex items-center gap-4">
+            <div className="relative print:hidden">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input 
                 type="text" 
@@ -31,7 +31,7 @@ export default function DevicesPage() {
               />
             </div>
             <ExportButton data={devices} filename="alerto_devices_export.csv" label="Export Data" />
-            <button className="flex items-center gap-2 bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button className="flex items-center gap-2 bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors print:hidden">
               + Add New Device
             </button>
           </div>
@@ -46,7 +46,7 @@ export default function DevicesPage() {
                 <span className="text-emerald-400 text-sm font-medium">+5%</span>
               </div>
             </div>
-            <div className="text-blue-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg></div>
+            <div className="text-blue-400 print:hidden"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg></div>
           </div>
 
           <div className="bg-[#242F41] rounded-xl p-6 shadow-sm border border-slate-700/30 flex justify-between items-start">
@@ -57,7 +57,7 @@ export default function DevicesPage() {
                 <span className="text-rose-400 text-sm font-medium">-2%</span>
               </div>
             </div>
-            <div className="text-emerald-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <div className="text-emerald-400 print:hidden"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
           </div>
 
           <div className="bg-[#242F41] rounded-xl p-6 shadow-sm border border-slate-700/30 flex justify-between items-start">
@@ -68,7 +68,7 @@ export default function DevicesPage() {
                 <span className="text-rose-400 text-sm font-medium">-10%</span>
               </div>
             </div>
-            <div className="text-blue-500"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="16" height="22" x="4" y="2" rx="2" ry="2"/><line x1="12" x2="12" y1="18" y2="18.01"/></svg></div>
+            <div className="text-blue-500 print:hidden"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="16" height="22" x="4" y="2" rx="2" ry="2"/><line x1="12" x2="12" y1="18" y2="18.01"/></svg></div>
           </div>
         </div>
 

@@ -60,7 +60,9 @@ export function DevicesTable({ devices }: { devices: any[] }) {
         </table>
       </div>
       <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
-        <span className="text-sm text-slate-400">Showing 1 to 5 of 1,284 devices</span>
+        <span className="text-sm text-slate-400">
+          Showing {devices.length > 0 ? 1 : 0} to {devices.length} of {devices.length} devices
+        </span>
         <div className="flex gap-2">
           <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg></button>
           <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg></button>

@@ -1,13 +1,82 @@
-export const runtime = 'edge';
 import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function GET() {
-  const devicesList = [
-    { id: 1, account: "mira.m@alerto.com", deviceId: "DEV-9021", lastPing: "2 mins ago", battery: 85, batColor: "bg-emerald-400", status: "Connected" },
-    { id: 2, account: "nathalie.d@alerto.com", deviceId: "DEV-4432", lastPing: "5 mins ago", battery: 42, batColor: "bg-orange-400", status: "Connected" },
-    { id: 3, account: "fiona.a@alerto.com", deviceId: "DEV-1120", lastPing: "1 hour ago", battery: 15, batColor: "bg-blue-500", status: "Low Power" },
-    { id: 4, account: "justine.j@alerto.com", deviceId: "DEV-8876", lastPing: "12 mins ago", battery: 100, batColor: "bg-emerald-400", status: "Connected" },
-    { id: 5, account: "joseph.m@alerto.com", deviceId: "DEV-5541", lastPing: "3 days ago", battery: 0, batColor: "bg-slate-600", status: "Offline" },
-  ];
-  return NextResponse.json({ devices: devicesList });
+  try {
+    const usersWithDevices = await prisma.user.findMany({
+      where: {
+        deviceId: {
+          not: null
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        deviceId: true,
+        lastActive: true,
+        batteryLevel: true,
+        isOnline: true
+      }
+    });
+
+    let activeNodes = 0;
+    let lowBattery = 0;
+
+    const devices = usersWithDevices.map(user => {
+      let status = "Offline";
+      let batColor = "bg-slate-600";
+      const battery = user.batteryLevel ?? 0;
+
+      if (user.isOnline) {
+        status = "Connected";
+        activeNodes++;
+      } else if (battery <= 20) {
+        status = "Low Power";
+      }
+
+      if (battery > 50) {
+        batColor = "bg-emerald-400";
+      } else if (battery > 20) {
+        batColor = "bg-orange-400";
+      } else {
+        batColor = "bg-rose-500";
+        lowBattery++;
+      }
+
+      // calculate relative time
+      let lastPing = "Unknown";
+      if (user.lastActive) {
+        const diffMs = Date.now() - new Date(user.lastActive).getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) lastPing = "Just now";
+        else if (diffMins < 60) lastPing = `${diffMins} mins ago`;
+        else if (diffMins < 1440) lastPing = `${Math.floor(diffMins / 60)} hours ago`;
+        else lastPing = `${Math.floor(diffMins / 1440)} days ago`;
+      }
+
+      return {
+        id: user.id,
+        account: user.email,
+        deviceId: user.deviceId,
+        lastPing,
+        battery,
+        batColor,
+        status
+      };
+    });
+
+    return NextResponse.json({
+      devices,
+      stats: {
+        totalDevices: devices.length,
+        activeNodes,
+        lowBattery
+      }
+    });
+  } catch (error) {
+    console.error("Failed to fetch devices:", error);
+    return NextResponse.json({ error: "Failed to fetch devices" }, { status: 500 });
+  }
 }

@@ -7,7 +7,7 @@ import { ExportButton } from "@/components/dashboard/export-button";
 import { useDevices } from "@/hooks/useDevices";
 
 export default function DevicesPage() {
-  const { devices, loading } = useDevices();
+  const { devices, stats, loading } = useDevices();
   
   useEffect(() => {
     document.title = "Alerto | Device";
@@ -42,8 +42,7 @@ export default function DevicesPage() {
             <div>
               <p className="text-sm text-slate-400 font-medium mb-1">Total Devices</p>
               <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-bold text-white">1,284</h3>
-                <span className="text-emerald-400 text-sm font-medium">+5%</span>
+                <h3 className="text-3xl font-bold text-white">{stats?.totalDevices || 0}</h3>
               </div>
             </div>
             <div className="text-blue-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg></div>
@@ -53,8 +52,7 @@ export default function DevicesPage() {
             <div>
               <p className="text-sm text-slate-400 font-medium mb-1">Active Nodes</p>
               <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-bold text-white">1,240</h3>
-                <span className="text-rose-400 text-sm font-medium">-2%</span>
+                <h3 className="text-3xl font-bold text-white">{stats?.activeNodes || 0}</h3>
               </div>
             </div>
             <div className="text-emerald-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
@@ -64,8 +62,7 @@ export default function DevicesPage() {
             <div>
               <p className="text-sm text-slate-400 font-medium mb-1">Low Battery Alert</p>
               <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-bold text-white">12</h3>
-                <span className="text-rose-400 text-sm font-medium">-10%</span>
+                <h3 className="text-3xl font-bold text-white">{stats?.lowBattery || 0}</h3>
               </div>
             </div>
             <div className="text-blue-500"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="16" height="22" x="4" y="2" rx="2" ry="2"/><line x1="12" x2="12" y1="18" y2="18.01"/></svg></div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 
 export type UserStatus = 'All Users' | 'Active' | 'Inactive' | 'Disabled';
 
@@ -99,7 +100,9 @@ export function useUsers() {
     if (!user) return;
 
     const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
-    
+  
+    const toastId = toast.loading("Updating user access...");
+
     try {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: "PATCH",
@@ -109,13 +112,21 @@ export function useUsers() {
 
       if (res.ok) {
         setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus } : u));
+    
+        toast.success(
+          newStatus === 'Active' 
+            ? `Access granted to ${user.name}` 
+            : `Access restricted for ${user.name}`,
+          { id: toastId }
+        );
+
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to update status");
+        toast.error(data.error || "Failed to update status", { id: toastId });
       }
     } catch (err) {
       console.error("Failed to toggle status", err);
-      alert("An error occurred while updating status");
+      toast.error("An error occurred while updating status", { id: toastId });
     }
   };
 

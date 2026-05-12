@@ -3,22 +3,26 @@ import bcrypt from "bcrypt";
 
 import { prisma } from "@/lib/prisma";
 import { hashPasswordResetToken } from "@/lib/password-reset";
-
-const MIN_PASSWORD_LENGTH = 8;
+import { resetPasswordSchema, validateInput, formatValidationError } from "@/lib/validationSchemas";
 
 export async function POST(req: Request) {
   try {
-    const { token, password } = await req.json();
+    const body = await req.json();
+
+    // Validate input with zod schema
+    const validation = validateInput(resetPasswordSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: formatValidationError(validation.errors!) },
+        { status: 400 }
+      );
+    }
+
+    const { token } = body;
+    const { password } = validation.data;
 
     if (!token || typeof token !== "string") {
       return NextResponse.json({ error: "Reset token is required" }, { status: 400 });
-    }
-
-    if (!password || typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
-      return NextResponse.json(
-        { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` },
-        { status: 400 }
-      );
     }
 
     const hashedToken = hashPasswordResetToken(token);

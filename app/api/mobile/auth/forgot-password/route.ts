@@ -3,14 +3,22 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createPasswordResetToken, getPasswordResetLinks } from "@/lib/password-reset";
 import { sendPasswordResetEmail } from "@/lib/sendgrid";
+import { forgotPasswordSchema, validateInput, formatValidationError } from "@/lib/validationSchemas";
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
 
-    if (!email || typeof email !== "string") {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    // Validate input with zod schema
+    const validation = validateInput(forgotPasswordSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({
+        success: true,
+        message: "If an account exists for that email, a password reset link has been sent.",
+      });
     }
+
+    const { email } = validation.data;
 
     const normalizedEmail = email.trim().toLowerCase();
     const user = await prisma.user.findUnique({

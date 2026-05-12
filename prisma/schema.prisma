@@ -21,6 +21,7 @@ model User {
   deviceId    String?      
   isOnline    Boolean      @default(false) 
   lastActive  DateTime?    
+  batteryLevel Int?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   savedPlaces SavedPlace[]

@@ -1,10 +1,27 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
+
+// Simple google auth validation schema
+const googleAuthValidationSchema = z.object({
+    email: z.string().email("Invalid email format"),
+    name: z.string().min(1, "Name is required").optional(),
+    googleId: z.string().min(1, "Google ID is required"),
+    image: z.string().optional(),
+});
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, name, googleId, image } = body;
+
+        // Validate input
+        const validation = googleAuthValidationSchema.safeParse(body);
+        if (!validation.success) {
+            const errors = validation.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+            return NextResponse.json({ error: errors }, { status: 400 });
+        }
+
+        const { email, name, googleId, image } = validation.data;
 
         const user = await prisma.user.upsert({
             where: { email: email },

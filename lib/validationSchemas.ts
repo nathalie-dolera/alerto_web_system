@@ -11,8 +11,7 @@ const emailSchema = z
 
 const passwordSchema = z
   .string()
-  .min(1, "Password is required")
-  .min(8, "Password must be at least 8 characters long");
+  .min(1, "Password is required");
 
 const strongPasswordSchema = z
   .string()
@@ -183,7 +182,7 @@ export function validateInput<T extends z.ZodType<any, any, any>>(
 
   if (!result.success) {
     const errors: Record<string, string[]> = {};
-    result.error.errors.forEach((err) => {
+    result.error.issues.forEach((err: z.ZodIssue) => {
       const key = err.path.join(".");
       if (!errors[key]) errors[key] = [];
       errors[key].push(err.message);

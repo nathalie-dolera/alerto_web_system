@@ -22,6 +22,21 @@ export async function PUT(
       return NextResponse.json({ error: "Password is required" }, { status: 400 });
     }
 
+    const passwordRules = {
+      length: password.length >= 8,
+      upper: /[A-Z]/.test(password),
+      lower: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      symbol: /[!@#$%^&*(),.?":{}|<>\-_]/.test(password),
+    };
+
+    const isPasswordStrong = Object.values(passwordRules).every(rule => rule === true);
+    if (!isPasswordStrong) {
+      return NextResponse.json({
+        error: 'Password does not meet security requirements. Must include uppercase, lowercase, number, and special character.'
+      }, { status: 400 });
+    }
+
     const existingAdmin = await prisma.admin.findUnique({
       where: { id: cleanId }
     });

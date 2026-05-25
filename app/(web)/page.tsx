@@ -20,14 +20,10 @@ export default function AdminLogin() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<AdminLoginInput>({
     resolver: zodResolver(adminLoginSchema),
     mode: "onBlur",
   });
-
-  const email = watch("email");
-  const password = watch("password");
 
   useEffect(() => {
     document.title = "Alerto | Login";
@@ -109,20 +105,21 @@ export default function AdminLogin() {
         </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center">
-            {error}
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center flex items-start gap-2 justify-center">
+            <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>{error}</span>
           </div>
         )}
 
-        <form className="space-y-5" onSubmit={handleSubmit(handleLogin)}>
+        <form className="space-y-5" onSubmit={handleSubmit(handleLogin)} noValidate>
           {Object.keys(errors).length > 0 && (
-            <FormErrors errors={Object.keys(errors).length > 0 ? undefined : undefined} />
+            <FormErrors errors={errors as any} />
           )}
           
           <div className="space-y-2">
             <label htmlFor="admin-email" className="text-xs font-semibold text-slate-300">Email Address</label>
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${errors.email ? 'text-red-400' : 'text-slate-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="16" x="2" y="4" rx="2"></rect>
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
               </svg>
@@ -147,7 +144,7 @@ export default function AdminLogin() {
               </Link>
             </div>
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${errors.password ? 'text-red-400' : 'text-slate-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>

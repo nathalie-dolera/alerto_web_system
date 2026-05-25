@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json({ error: "Email already in use" }, { status: 400 });
+      return NextResponse.json({ error: "Email already in use." }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     console.error("Registration API Error:", error);
     
     return NextResponse.json(
-      { error: "Internal Server Error" }, 
+      { error: "An unexpected error occurred during registration. Please try again." }, 
       { status: 500 }
     );
   }

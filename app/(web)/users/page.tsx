@@ -11,8 +11,6 @@ import { addSubAdminSchema, type AddSubAdminInput } from "@/lib/validationSchema
 import { FieldError } from "@/components/FormErrors";
 
 export default function UsersPage() {
-  const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [showAddPassword, setShowAddPassword] = useState(false);
   
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -69,6 +67,13 @@ export default function UsersPage() {
     setUpdatePasswordInput("");
     setUpdateSuccess(false);
     setShowUpdatePassword(false);
+  };
+
+  const onSubmit = async (data: AddSubAdminInput) => {
+    const success = await handleAddSubAdmin(data.email, data.password, data.confirmPassword);
+    if (success) {
+      clearForm();
+    }
   };
 
   const submitUpdatePassword = async (e: React.FormEvent) => {
@@ -185,8 +190,9 @@ export default function UsersPage() {
             
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
               {addError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
-                  {addError}
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-start gap-2">
+                  <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>{addError}</span>
                 </div>
               )}
               
@@ -209,12 +215,12 @@ export default function UsersPage() {
                 <div className="relative">
                   <input
                     type={showAddPassword ? "text" : "password"}
-                    required
                     autoComplete="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                    {...register("password")}
+                    className={`w-full bg-[#0F172A] text-white border ${
+                      errors.password ? "border-red-500" : "border-slate-700/50"
+                    } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
                   />
                   <button
                     type="button"
@@ -228,6 +234,23 @@ export default function UsersPage() {
                     )}
                   </button>
                 </div>
+                {errors.password && <FieldError error={errors.password.message} />}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-300">Confirm Password</label>
+                <div className="relative">
+                  <input
+                    type={showAddPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    {...register("confirmPassword")}
+                    className={`w-full bg-[#0F172A] text-white border ${
+                      errors.confirmPassword ? "border-red-500" : "border-slate-700/50"
+                    } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
+                  />
+                </div>
+                {errors.confirmPassword && <FieldError error={errors.confirmPassword.message} />}
               </div>
 
               <div className="pt-4 flex gap-3 flex-row-reverse">
@@ -247,7 +270,11 @@ export default function UsersPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={clearForm}
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to clear?")) {
+                      clearForm();
+                    }
+                  }}
                   className="mr-auto text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
                 >
                   Clear Form

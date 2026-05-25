@@ -7,7 +7,15 @@ const emailSchema = z
   .string()
   .min(1, "Email is required")
   .email("Please enter a valid email address")
-  .toLowerCase();
+  .toLowerCase()
+  .refine(
+    (val) => {
+      const domain = val.split("@")[1];
+      const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "commutewake.com"];
+      return allowedDomains.includes(domain);
+    },
+    { message: "Incorrect domain format" }
+  );
 
 const passwordSchema = z
   .string()

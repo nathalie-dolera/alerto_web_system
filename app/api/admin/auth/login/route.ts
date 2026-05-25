@@ -2,17 +2,25 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { adminLoginSchema, validateInput, formatValidationError } from '@/lib/validationSchemas';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'alerto-admin-secret-key-for-jwt';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    // Validate input with zod schema
+    const validation = validateInput(adminLoginSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: formatValidationError(validation.errors!) },
+        { status: 400 }
+      );
     }
+
+    const { email, password } = validation.data;
 
     const admin = await prisma.admin.findUnique({
       where: { email },

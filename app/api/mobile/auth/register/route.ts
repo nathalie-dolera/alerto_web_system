@@ -1,23 +1,22 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
+import { mobileRegisterSchema, validateInput, formatValidationError } from '@/lib/validationSchemas';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name } = body;
 
-    if (!email || !email.trim()) {
-      return NextResponse.json({ error: "Email address is required." }, { status: 400 });
+    // Validate input with zod schema
+    const validation = validateInput(mobileRegisterSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: formatValidationError(validation.errors!) },
+        { status: 400 }
+      );
     }
 
-    if (!password || !password.trim()) {
-      return NextResponse.json({ error: "Password is required." }, { status: 400 });
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters long." }, { status: 400 });
-    }
+    const { email, password, name } = validation.data;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {

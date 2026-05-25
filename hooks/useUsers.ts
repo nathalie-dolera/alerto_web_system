@@ -139,14 +139,14 @@ export function useUsers() {
     }
   };
 
-  const handleAddSubAdmin = async (email: string, password: string): Promise<boolean> => {
+  const handleAddSubAdmin = async (email: string, password: string, confirmPassword?: string): Promise<boolean> => {
     setAddLoading(true);
     setAddError("");
     try {
       const res = await fetch("/api/admin/users/sub-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, confirmPassword: confirmPassword ?? password }),
       });
       const data = await res.json();
       

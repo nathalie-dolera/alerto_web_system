@@ -2,35 +2,26 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validationSchemas";
+import { FieldError, SuccessMessage } from "@/components/FormErrors";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string }>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    
-    const errors: { email?: string } = {};
-    if (!email.trim()) {
-      errors.email = "Please enter your email address.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = "Please enter a valid email address.";
-    } else {
-      const domain = email.split('@')[1]?.toLowerCase();
-      const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'commutewake.com'];
-      if (!allowedDomains.includes(domain)) {
-        errors.email = "Incorrect domain format";
-      }
-    }
-    
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) {
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: "onBlur",
+  });
 
+  const onSubmit = async (data: ForgotPasswordInput) => {
     setLoading(true);
     setError("");
     setMessage("");
@@ -39,17 +30,17 @@ export default function ForgotPasswordPage() {
       const response = await fetch("/api/mobile/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Unable to send reset link.");
+        setError(responseData.error || "Unable to send reset link.");
         return;
       }
 
-      setMessage(data.message || "Check your email for your password reset link.");
+      setMessage(responseData.message || "Check your email for your password reset link.");
     } catch {
       setError("Unable to send reset link.");
     } finally {
@@ -74,29 +65,22 @@ export default function ForgotPasswordPage() {
         ) : null}
 
         {message ? (
-          <div className="mt-6 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 flex items-start gap-2">
-            <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <span>{message}</span>
-          </div>
+          <SuccessMessage message={message} />
         ) : null}
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-300">Email</label>
             <input
               id="email"
               type="email"
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                if (fieldErrors.email) setFieldErrors({});
-              }}
-              className={`w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-700 focus:border-blue-500'} bg-[#0F172A] px-4 py-3 text-sm outline-none transition`}
               placeholder="name@example.com"
+              {...register("email")}
+              className={`w-full rounded-lg border ${
+                errors.email ? "border-red-500" : "border-slate-700"
+              } bg-[#0F172A] px-4 py-3 text-sm outline-none transition focus:border-blue-500`}
             />
-            {fieldErrors.email && (
-              <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>
-            )}
+            {errors.email && <FieldError error={errors.email.message} />}
           </div>
 
           <button

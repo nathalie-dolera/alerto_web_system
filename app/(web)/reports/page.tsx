@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { ExportButton } from "@/components/dashboard/export-button";
 
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState("System Overview");
   const [selectedAnomaly, setSelectedAnomaly] = useState<string | null>(null);
-
-  useEffect(() => {
-    document.title = "Alerto | Reports";
-  }, []);
 
   const getAiInsight = () => {
     switch (activeTab) {
@@ -144,12 +140,12 @@ export default function ReportsPage() {
                      { time: "05:00 PM - 07:00 PM", users: 1850, percent: "100%" },
                      { time: "12:00 PM - 01:00 PM", users: 890, percent: "45%" }
                    ].map((slot, i) => (
-                     <div key={i}>
+                    <div key={slot.time}>
                        <div className="flex justify-between text-sm mb-2">
                          <span className="text-slate-300 font-medium">{slot.time}</span>
                          <span className="text-slate-400">{slot.users} live users</span>
                        </div>
-                       <div className="w-full bg-slate-700/50 h-4 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-700/50 h-4 rounded-full overflow-hidden">
                          <div className="bg-indigo-500 h-full rounded-full transition-all duration-1000" style={{ width: slot.percent }}></div>
                        </div>
                      </div>
@@ -216,7 +212,7 @@ export default function ReportsPage() {
                      <div className="flex justify-between items-center mb-3">
                         <h4 className="text-sm font-bold text-white flex items-center gap-2">
                            {selectedAnomaly} Records
-                           <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full uppercase tracking-wide">Sample Data</span>
+                           <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full uppercase tracking-wide">Sample Data</span>{' '}
                         </h4>
                         <button onClick={() => setSelectedAnomaly(null)} className="text-slate-400 hover:text-white p-1 bg-slate-800 rounded-full">
                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -339,7 +335,7 @@ export default function ReportsPage() {
             <h1 className="text-3xl font-bold text-white mb-2">Reports & Analytics</h1>
             <p className="text-slate-400">View comprehensive system reports and historical data</p>
           </div>
-          <ExportButton stats={{}} users={[]} filename={`alerto_${activeTab.toLowerCase().replace(/ /g, '_')}_report.csv`} label="Export Report" />
+          <ExportButton stats={{}} users={[]} filename={`alerto_${activeTab.toLowerCase().replaceAll(' ', '_')}_report.csv`} label="Export Report" />
         </header>
 
         {/* Tab Navigation */}
@@ -369,8 +365,8 @@ export default function ReportsPage() {
                </div>
                <div className="flex-1">
                   <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                     Alerto AI Data Compilation
-                     <span className="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 tracking-wider">AUTO-GENERATED</span>
+                    <span className="mr-2">Alerto AI Data Compilation</span>
+                    <span className="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 tracking-wider">AUTO-GENERATED</span>
                   </h3>
                   <p className="text-slate-300 text-sm mb-4 leading-relaxed max-w-4xl">
                     {currentAiInsight.compilation}
@@ -412,8 +408,8 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50 text-slate-300 bg-[#0F172A]/30">
-                {tableData.map((row, index) => (
-                  <tr key={index} className="hover:bg-slate-800/40 transition-colors">
+                {tableData.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-800/40 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-400">{row.id}</td>
                     <td className="px-6 py-4">{row.description}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-slate-500">{row.date}</td>
@@ -433,3 +429,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+

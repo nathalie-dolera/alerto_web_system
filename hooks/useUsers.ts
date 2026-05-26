@@ -59,11 +59,11 @@ export function useUsers() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
+    if (globalThis.window !== undefined) {
+      const params = new URLSearchParams(globalThis.window.location.search);
       const tab = params.get("tab");
       if (tab === "Active" || tab === "Inactive" || tab === "All Users") {
-        setActiveTab(tab as UserStatus);
+        setActiveTab(tab);
       }
     }
   }, []);
@@ -71,16 +71,16 @@ export function useUsers() {
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
       // Determine display status
-      let displayStatus: UserStatus = 'Active';
-      
+      let displayStatus: UserStatus;
+
       if (user.status === 'Inactive') {
         displayStatus = 'Disabled';
-      } else if (!user.isAdmin) {
-        // Commuters
-        displayStatus = user.isOnline ? 'Active' : 'Inactive';
-      } else {
+      } else if (user.isAdmin) {
         // Admins
         displayStatus = 'Active';
+      } else {
+        // Commuters
+        displayStatus = user.isOnline ? 'Active' : 'Inactive';
       }
 
       const matchesSearch = 
@@ -120,7 +120,7 @@ export function useUsers() {
   };
 
   const deleteUser = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    if (globalThis.window !== undefined && !globalThis.window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
       const res = await fetch(`/api/admin/users/${id}`, {
@@ -167,6 +167,7 @@ export function useUsers() {
         return false;
       }
     } catch (err) {
+      console.error("Failed to create sub-admin", err);
       setAddError("An error occurred. Please try again.");
       return false;
     } finally {

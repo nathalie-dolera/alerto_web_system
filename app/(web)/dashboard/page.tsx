@@ -6,7 +6,7 @@ import { UserTable } from "@/components/dashboard/user-table";
 import { ExportButton } from "@/components/dashboard/export-button";
 
 export const metadata: Metadata = {
-  title: "Alerto | Dashboard",
+  title: "Dashboard | Alerto",
 };
 
 export default async function DashboardPage() {

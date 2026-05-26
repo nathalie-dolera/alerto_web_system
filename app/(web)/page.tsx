@@ -20,14 +20,17 @@ export default function AdminLogin() {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<AdminLoginInput>({
     resolver: zodResolver(adminLoginSchema),
     mode: "onBlur",
   });
 
-  
+  const email = watch("email");
+  const password = watch("password");
 
   useEffect(() => {
+    document.title = "Alerto | Login";
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
@@ -62,7 +65,7 @@ export default function AdminLogin() {
 
       let responseData;
       const contentType = res.headers.get("content-type");
-      if (contentType?.includes("application/json")) {
+      if (contentType && contentType.indexOf("application/json") !== -1) {
         responseData = await res.json();
       } else {
         const text = await res.text();
@@ -113,7 +116,7 @@ export default function AdminLogin() {
 
         <form className="space-y-5" onSubmit={handleSubmit(handleLogin)}>
           {Object.keys(errors).length > 0 && (
-            <FormErrors errors={errors as any} />
+            <FormErrors errors={Object.keys(errors).length > 0 ? undefined : undefined} />
           )}
           
           <div className="space-y-2">

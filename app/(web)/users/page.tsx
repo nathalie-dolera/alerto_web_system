@@ -11,8 +11,6 @@ import { addSubAdminSchema, type AddSubAdminInput } from "@/lib/validationSchema
 import { FieldError } from "@/components/FormErrors";
 
 export default function UsersPage() {
-  const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [showAddPassword, setShowAddPassword] = useState(false);
   
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -40,6 +38,13 @@ export default function UsersPage() {
     mode: "onBlur",
   });
   
+  const onSubmit = async (data: AddSubAdminInput) => {
+    const success = await handleAddSubAdmin(data.email, data.password);
+    if (success) {
+      closeModal();
+    }
+  };
+
   useEffect(() => {
     document.title = "Alerto | User";
   }, []);
@@ -209,12 +214,12 @@ export default function UsersPage() {
                 <div className="relative">
                   <input
                     type={showAddPassword ? "text" : "password"}
-                    required
                     autoComplete="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    {...register("password")}
                     placeholder="••••••••"
-                    className="w-full bg-[#0F172A] text-white border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest"
+                    className={`w-full bg-[#0F172A] text-white border ${
+                      errors.password ? "border-red-500" : "border-slate-700/50"
+                    } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
                   />
                   <button
                     type="button"
@@ -228,6 +233,23 @@ export default function UsersPage() {
                     )}
                   </button>
                 </div>
+                {errors.password && <FieldError error={errors.password.message} />}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-300">Confirm Password</label>
+                <div className="relative">
+                  <input
+                    type={showAddPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    {...register("confirmPassword")}
+                    placeholder="••••••••"
+                    className={`w-full bg-[#0F172A] text-white border ${
+                      errors.confirmPassword ? "border-red-500" : "border-slate-700/50"
+                    } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2.5 px-4 pr-10 outline-none transition-all placeholder:text-slate-600 text-sm tracking-widest`}
+                  />
+                </div>
+                {errors.confirmPassword && <FieldError error={errors.confirmPassword.message} />}
               </div>
 
               <div className="pt-4 flex gap-3 flex-row-reverse">

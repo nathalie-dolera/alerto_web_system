@@ -22,7 +22,7 @@ export function FormErrors({ errors, generalError }: FormErrorsProps) {
           {Object.entries(errors).map(([field, message]) => (
             <div key={field} className="text-sm text-red-500 flex items-start gap-2">
               <span className="text-red-400 mt-0.5">•</span>
-              <span>{message?.message || message}</span>
+              <span>{message}</span>
             </div>
           ))}
         </div>

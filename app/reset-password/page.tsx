@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { useForm, watch } from "react-hook-form";
+import { useMemo, useState, Suspense } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validationSchemas";
 import { FieldError, SuccessMessage } from "@/components/FormErrors";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
   
@@ -168,6 +168,18 @@ export default function ResetPasswordPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#F8FAFC] px-4 py-12 text-[#1E293B] font-sans flex items-center justify-center">
+        <p className="text-slate-500 font-bold text-sm">Loading...</p>
+      </main>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
 

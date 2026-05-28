@@ -17,7 +17,7 @@ export async function POST(request: Request) {
         // Validate input
         const validation = googleAuthValidationSchema.safeParse(body);
         if (!validation.success) {
-            const errors = validation.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+            const errors = validation.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
             return NextResponse.json({ error: errors }, { status: 400 });
         }
 

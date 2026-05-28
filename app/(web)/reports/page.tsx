@@ -4,13 +4,59 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { ExportButton } from "@/components/dashboard/export-button";
 
+type ReportAnalysis = {
+  compilation: string;
+  recommendation: string;
+  generatedBy: "gemini" | "fallback";
+  model: string;
+  analyzedAt: string;
+};
+
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState("System Overview");
   const [selectedAnomaly, setSelectedAnomaly] = useState<string | null>(null);
+  const [analysisByTab, setAnalysisByTab] = useState<Record<string, ReportAnalysis>>({});
+  const [analysisStatus, setAnalysisStatus] = useState<"idle" | "loading" | "error">("idle");
 
   useEffect(() => {
     document.title = "Alerto | Reports";
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAnalysis() {
+      setAnalysisStatus("loading");
+
+      try {
+        const response = await fetch(`/api/admin/reports/analysis?tab=${encodeURIComponent(activeTab)}`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load report analysis");
+        }
+
+        const data = await response.json();
+        if (!cancelled && data.analysis) {
+          setAnalysisByTab((current) => ({
+            ...current,
+            [activeTab]: data.analysis,
+          }));
+          setAnalysisStatus("idle");
+        }
+      } catch (error) {
+        console.error("Failed to load AI report analysis", error);
+        if (!cancelled) setAnalysisStatus("error");
+      }
+    }
+
+    loadAnalysis();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   const getAiInsight = () => {
     switch (activeTab) {
@@ -322,7 +368,8 @@ export default function ReportsPage() {
 
   const tabs = ["System Overview", "User Activity", "Alarm History", "Device Metrics"];
   const tableData = getTableData();
-  const currentAiInsight = getAiInsight();
+  const currentAiInsight = analysisByTab[activeTab] ?? getAiInsight();
+  const currentAnalysisMeta = analysisByTab[activeTab];
 
   // Reset selected anomaly when tab changes
   useEffect(() => {
@@ -371,6 +418,14 @@ export default function ReportsPage() {
                   <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                      Alerto AI Data Compilation
                      <span className="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 tracking-wider">AUTO-GENERATED</span>
+                     {currentAnalysisMeta && (
+                       <span className="text-[10px] font-semibold bg-slate-700/60 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600 tracking-wider">
+                         {currentAnalysisMeta.generatedBy === "gemini" ? "GEMINI" : "LOCAL FALLBACK"}
+                       </span>
+                     )}
+                     {analysisStatus === "loading" && (
+                       <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30 tracking-wider">REFRESHING</span>
+                     )}
                   </h3>
                   <p className="text-slate-300 text-sm mb-4 leading-relaxed max-w-4xl">
                     {currentAiInsight.compilation}
@@ -384,6 +439,11 @@ export default function ReportsPage() {
                        {currentAiInsight.recommendation}
                      </p>
                   </div>
+                  {analysisStatus === "error" && (
+                    <p className="text-xs text-amber-300 mt-3">
+                      Live Gemini analysis is unavailable right now, so the report is showing the saved baseline insight.
+                    </p>
+                  )}
                </div>
             </div>
           </div>

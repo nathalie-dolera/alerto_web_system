@@ -17,6 +17,23 @@ const RSS_FEEDS = [
   'https://www.inquirer.net/fullfeed' 
 ];
 
+const GEMINI_MODELS_TO_TRY = [
+  process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+].filter((model, index, models) => model && models.indexOf(model) === index);
+
+function extractJsonArray(text: string) {
+  const cleanText = text
+    .trim()
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/i, '');
+
+  return cleanText.match(/\[[\s\S]*\]/)?.[0] ?? cleanText;
+}
+
 async function fetchAllRSSDescriptions(): Promise<string> {
   const parser = new XMLParser();
   let combinedNews = '';
@@ -53,7 +70,7 @@ async function fetchAllRSSDescriptions(): Promise<string> {
 }
 
 export async function fetchAIProcessedIncidents(): Promise<AIIncident[]> {
-  const geminiApiKey = env.GEMINI_API_KEY;
+  const geminiApiKey = env.GEMINI_API_KEY || env.EXPO_PUBLIC_GEMINI_API_KEY;
   const tomtomApiKey = env.TOMTOM_API_KEY;
 
   if (!geminiApiKey || !tomtomApiKey) {
@@ -85,27 +102,34 @@ export async function fetchAIProcessedIncidents(): Promise<AIIncident[]> {
     ${rawNewsText.substring(0, 15000)}
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-
-    const text = (response as { text?: string })?.text;
-    if (!text) return [];
-
-    let rawText = text.trim();
-    if (rawText.startsWith('```json')) {
-      rawText = rawText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '');
-    } else if (rawText.startsWith('```')) {
-      rawText = rawText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '');
-    }
-
     let parsed: unknown;
-    try {
-      parsed = JSON.parse(rawText);
-    } catch (err) {
-      console.warn('Failed to parse AI JSON output:', err);
-      return [];
+
+    for (const model of GEMINI_MODELS_TO_TRY) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          ...(model.includes('2.5')
+            ? {
+                config: {
+                  thinkingConfig: {
+                    thinkingBudget: 0,
+                  },
+                },
+              }
+            : {}),
+        });
+
+        const text = (response as { text?: string })?.text;
+        if (!text) continue;
+
+        parsed = JSON.parse(extractJsonArray(text));
+        break;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn(`Gemini incident extraction failed with ${model}; trying next model if available.`, message);
+        continue;
+      }
     }
 
     if (!Array.isArray(parsed)) {

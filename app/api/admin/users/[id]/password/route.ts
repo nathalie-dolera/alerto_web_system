@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 export async function PUT(
   request: Request,
-  { params }: { params: any }
+  { params }: { params: Promise<{ id: string; userId?: string; adminId?: string }> }
 ) {
   try {
     const resolvedParams = await params; 

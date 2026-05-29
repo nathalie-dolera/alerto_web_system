@@ -203,7 +203,7 @@ function isValidAnalysis(value: unknown): value is Pick<ReportAnalysis, 'compila
   return typeof maybe.compilation === 'string' && typeof maybe.recommendation === 'string';
 }
 
-export async function generateReportAnalysis(tab: ReportTab): Promise<ReportAnalysis> {
+export async function generateReportAnalysis(tab: ReportTab): Promise<{ analysis: ReportAnalysis, snapshot: any }> {
   const snapshot = await buildReportSnapshot(tab);
   const preferredModel = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
   const apiKey = process.env.GEMINI_API_KEY || process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -213,7 +213,7 @@ export async function generateReportAnalysis(tab: ReportTab): Promise<ReportAnal
   ];
 
   if (!apiKey) {
-    return buildFallbackAnalysis(tab, snapshot, preferredModel);
+    return { analysis: buildFallbackAnalysis(tab, snapshot, preferredModel), snapshot };
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -254,11 +254,14 @@ ${JSON.stringify(snapshot).slice(0, 12000)}
       if (!isValidAnalysis(parsed)) continue;
 
       return {
-        compilation: parsed.compilation.trim(),
-        recommendation: parsed.recommendation.trim(),
-        generatedBy: 'gemini',
-        model,
-        analyzedAt: new Date().toISOString(),
+        analysis: {
+          compilation: parsed.compilation.trim(),
+          recommendation: parsed.recommendation.trim(),
+          generatedBy: 'gemini',
+          model,
+          analyzedAt: new Date().toISOString(),
+        },
+        snapshot
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -278,5 +281,5 @@ ${JSON.stringify(snapshot).slice(0, 12000)}
     }
   }
 
-  return buildFallbackAnalysis(tab, snapshot, preferredModel);
+  return { analysis: buildFallbackAnalysis(tab, snapshot, preferredModel), snapshot };
 }

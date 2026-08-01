@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerto | Live Tracking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border-color: rgba(148, 163, 184, 0.15);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.4);
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Premium Overlay UI */
+    .overlay-container {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      width: 360px;
+      max-width: calc(100% - 48px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      pointer-events: none;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-container {
+      width: 44px;
+      height: 44px;
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #34d399;
+      margin-left: auto;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--success);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .coords-grid {
+      display: grid;
+      grid-cols: 2;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.4);
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+
+
+    .radar-icon-container {
+      position: relative;
+      width: 24px;
+      height: 24px;
+    }
+
+    .radar-core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      background-color: var(--primary);
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      z-index: 5;
+    }
+
+    .radar-ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 24px;
+      height: 24px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      opacity: 0.4;
+      animation: radar-pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+      z-index: 2;
+    }
+
+    .leaflet-control-zoom {
+      border: 1px solid var(--border-color) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+    }
+
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out {
+      background-color: var(--card-bg) !important;
+      color: var(--text-main) !important;
+      border: none !important;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .leaflet-control-zoom-in:hover,
+    .leaflet-control-zoom-out:hover {
+      background-color: rgba(59, 130, 246, 0.2) !important;
+    }
+
+    .leaflet-bar {
+      border: none !important;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0.9);
+        opacity: 0.6;
+      }
+
+      50% {
+        transform: scale(1.15);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(0.9);
+        opacity: 0.6;
+      }
+    }
+
+    @keyframes radar-pulse {
+      0% {
+        transform: scale(0.5);
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: scale(3.5);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="overlay-container">
+    <div class="glass-card brand-header">
+      <div class="logo-container">
+        <img src="/alerto_logo1.png" alt="Alerto"
+          onerror="this.src='https://raw.githubusercontent.com/Alerto-Commute-Monitor/alerto/main/logo.png'">
+      </div>
+      <div>
+        <h2 class="brand-title">ALERTO</h2>
+        <p class="brand-subtitle">Commute Monitor</p>
+      </div>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span>LIVE</span>
+      </div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="glass-card info-section">
+      <div>
+        <span class="info-label">Commuter Status</span>
+        <h3 class="info-value" style="margin-top: 4px; color: #38bdf8;">Sharing Live Location</h3>
+      </div>
+
+      <div class="coords-grid">
+        <div>
+          <span class="info-label">Latitude</span>
+          <div class="info-value" id="lat-val" style="font-size: 13px; font-family: monospace; margin-top: 2px;">--
+          </div>
+        </div>
+        <div>
+          <span class="info-label">Longitude</span>
+          <div class="info-value" id="lng-val" style="font-size: 13px; font-family: monospace; margin-top: 2px;">--
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <span class="info-label">Last Updated</span>
+        <div class="info-value" id="time-val" style="font-size: 13px; margin-top: 2px;">Detecting...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    let lat = parseFloat(params.get('lat'));
+    let lng = parseFloat(params.get('lng'));
+
+    if (isNaN(lat) || isNaN(lng)) {
+      lat = 14.4445;
+      lng = 120.9439;
+    }
+
+    document.getElementById('lat-val').innerText = lat.toFixed(6);
+    document.getElementById('lng-val').innerText = lng.toFixed(6);
+    document.getElementById('time-val').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const map = L.map('map', {
+      zoomControl: true,
+      attributionControl: false
+    }).setView([lat, lng], 16);
+
+    map.zoomControl.setPosition('topright');
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20
+    }).addTo(map);
+
+    const radarIcon = L.divIcon({
+      className: 'radar-marker',
+      html: `
+        <div class="radar-icon-container">
+          <div class="radar-core"></div>
+          <div class="radar-ring"></div>
+        </div>
+      `,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    const marker = L.marker([lat, lng], { icon: radarIcon }).addTo(map);
+
+    marker.bindPopup(`
+      <div style="color:#000; font-family:'Inter'; padding:2px;">
+        <b style="font-weight:700;">Commuter Position</b><br>
+        <span style="font-size:11px; color:#555;">Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}</span>
+      </div>
+    `);
+
+  </script>
+</body>
+
+</html>

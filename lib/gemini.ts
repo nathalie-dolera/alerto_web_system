@@ -18,7 +18,9 @@ const RSS_FEEDS = [
 ];
 
 const GEMINI_MODELS_TO_TRY = [
-  process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+  process.env.GEMINI_MODEL || 'gemini-flash-latest',
+  'gemini-3.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-2.5-flash',
   'gemini-1.5-flash',
   'gemini-1.5-pro',

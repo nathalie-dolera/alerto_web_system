@@ -31,9 +31,11 @@ const REPORT_TABS: ReportTab[] = [
   'Device Metrics',
 ];
 
-const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const DEFAULT_GEMINI_MODEL = 'gemini-flash-latest';
 const FALLBACK_GEMINI_MODELS = [
   DEFAULT_GEMINI_MODEL,
+  'gemini-3.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-2.5-flash',
   'gemini-1.5-flash',
   'gemini-1.5-pro',

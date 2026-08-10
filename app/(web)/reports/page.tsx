@@ -311,7 +311,7 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50 text-slate-300 bg-[#0F172A]/30">
-                {getTableData().map((row, index) => (
+                {getTableData().map((row: any, index: number) => (
                   <tr key={index} className="hover:bg-slate-800/40 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-400">{row.id}</td>
                     <td className="px-6 py-4">{row.description}</td>

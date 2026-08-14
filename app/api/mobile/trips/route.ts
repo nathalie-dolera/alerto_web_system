@@ -77,12 +77,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // When a trip is completed and saved, the commute monitor has stopped.
-    // Set isOnline: false so the user transitions to Inactive/Offline.
+    // If this is a booking scanner upload (has screenshot or booking details), mark user as Online/Active.
+    // If this is a completed commute trip, mark as Offline.
+    const isBookingScan = Boolean(screenshotUrl || bookingType);
     await prisma.user.update({
       where: { id: userId },
       data: {
-        isOnline: false,
+        isOnline: isBookingScan ? true : false,
         lastActive: new Date(),
       },
     }).catch(() => {});

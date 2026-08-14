@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'alerto-admin-secret-key-for-jwt';
+const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 async function getAuthorizedUser() {
   const cookieStore = await cookies();
@@ -26,20 +27,34 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    //fetch all users, commuters
-    const users = await prisma.user.findMany({
-      include: {
-        _count: {
-          select: { savedPlaces: true, trips: true, userAlerts: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    const now = Date.now();
+    const activeTripThreshold = new Date(now - 30 * 60 * 1000); // 30 minutes
+    const recentAlertThreshold = new Date(now - 15 * 60 * 1000); // 15 minutes
 
-    //fetch all admins, admin
-    const admins = await prisma.admin.findMany({
-      orderBy: { createdAt: 'desc' }
-    });
+    const [users, admins, activeTrips, recentAlerts] = await Promise.all([
+      prisma.user.findMany({
+        include: {
+          _count: {
+            select: { savedPlaces: true, trips: true, userAlerts: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.admin.findMany({
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.trip.findMany({
+        where: { date: { gte: activeTripThreshold } },
+        select: { userId: true },
+      }),
+      prisma.userAlert.findMany({
+        where: { createdAt: { gte: recentAlertThreshold } },
+        select: { userId: true },
+      })
+    ]);
+
+    const activeTripUserIds = new Set(activeTrips.map(t => t.userId));
+    const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
 
     const formattedUsers = [
       ...admins.map(admin => ({
@@ -54,18 +69,27 @@ export async function GET() {
         tripCount: 0,
         isOnline: admin.email === adminUser.email
       })),
-      ...users.map(user => ({
-        id: user.id,
-        name: user.name || user.email.split('@')[0],
-        email: user.email,
-        role: 'Commuter',
-        joinDate: user.createdAt.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-        status: user.status || 'Active',
-        isAdmin: false,
-        alarmCount: user._count.savedPlaces + user._count.userAlerts,
-        tripCount: user._count.trips,
-        isOnline: user.isOnline
-      }))
+      ...users.map(user => {
+        const hasBluetooth = Boolean(user.isOnline && user.lastActive && (now - new Date(user.lastActive).getTime() <= STALE_THRESHOLD_MS));
+        const hasActiveTrip = activeTripUserIds.has(user.id);
+        const hasRecentAlert = recentAlertUserIds.has(user.id);
+        const hasRecentActivity = Boolean(user.lastActive && (now - new Date(user.lastActive).getTime() <= 15 * 60 * 1000));
+
+        const isUserActive = hasBluetooth || hasActiveTrip || hasRecentAlert || hasRecentActivity;
+
+        return {
+          id: user.id,
+          name: user.name || user.email.split('@')[0],
+          email: user.email,
+          role: 'Commuter',
+          joinDate: user.createdAt.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          status: user.status || 'Active',
+          isAdmin: false,
+          alarmCount: user._count.savedPlaces + user._count.userAlerts,
+          tripCount: user._count.trips,
+          isOnline: isUserActive
+        };
+      })
     ];
 
     return NextResponse.json(formattedUsers);

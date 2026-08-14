@@ -2,10 +2,12 @@ import { prisma } from "@/lib/prisma";
 
 export type UserConnection = {
   id: string;
+  name: string;
   email: string;
   deviceId: string;
-  status: "Connected" | "Disconnected";
-  userStatus: string;
+  connectionStatus: "Connected" | "Offline";
+  status: string;
+  role: string;
   lastActive: string;
 };
 
@@ -21,17 +23,65 @@ export type DashboardData = {
   users: UserConnection[];
 };
 
+const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes staleness for bluetooth heartbeat
+
 export async function getDashboardData(): Promise<DashboardData> {
   try {
-    const activeUsersCount = await prisma.user.count({
-      where: { isOnline: true }
+    const now = Date.now();
+    const activeTripThreshold = new Date(now - 30 * 60 * 1000); // 30 mins
+    const recentAlertThreshold = new Date(now - 15 * 60 * 1000); // 15 mins
+
+    const [allUsersFromDb, activeTrips, recentAlerts] = await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          deviceId: true,
+          isOnline: true,
+          status: true,
+          lastActive: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.trip.findMany({
+        where: { date: { gte: activeTripThreshold } },
+        select: { userId: true },
+      }),
+      prisma.userAlert.findMany({
+        where: { createdAt: { gte: recentAlertThreshold } },
+        select: { userId: true },
+      }),
+    ]);
+
+    const activeTripUserIds = new Set(activeTrips.map(t => t.userId));
+    const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
+
+    // Determine multi-signal active status for each user
+    const usersWithRealtimeStatus = allUsersFromDb.map((user) => {
+      const hasBluetoothHeartbeat = Boolean(
+        user.isOnline && user.lastActive && (now - new Date(user.lastActive).getTime() <= STALE_THRESHOLD_MS)
+      );
+      const hasActiveTrip = activeTripUserIds.has(user.id);
+      const hasRecentAlert = recentAlertUserIds.has(user.id);
+      const hasRecentActivity = Boolean(
+        user.lastActive && (now - new Date(user.lastActive).getTime() <= 15 * 60 * 1000)
+      );
+
+      // User is ACTIVE if ANY of these commute/device signals are present
+      const isActuallyActive = hasBluetoothHeartbeat || hasActiveTrip || hasRecentAlert || hasRecentActivity;
+      const isDeviceConnected = hasBluetoothHeartbeat && Boolean(user.deviceId);
+
+      return {
+        ...user,
+        isActuallyActive,
+        isDeviceConnected,
+      };
     });
 
-    const registeredUsersCount = await prisma.user.count();
-
-    const connectedDevicesCount = await prisma.user.count({
-      where: { isOnline: true }
-    });
+    const activeUsersCount = usersWithRealtimeStatus.filter(u => u.isActuallyActive).length;
+    const registeredUsersCount = usersWithRealtimeStatus.length;
+    const connectedDevicesCount = usersWithRealtimeStatus.filter(u => u.isDeviceConnected).length;
 
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
@@ -44,23 +94,9 @@ export async function getDashboardData(): Promise<DashboardData> {
       }
     });
 
-    const activeUsers = await prisma.user.findMany({
-      where: { isOnline: true },
-      select: {
-        id: true,
-        email: true,
-        deviceId: true,
-        isOnline: true,
-        status: true,
-        lastActive: true,
-      },
-      orderBy: { lastActive: 'desc' },
-      take: 50,
-    });
-
     const formatLastActive = (date: Date | null) => {
       if (!date) return "Never";
-      const diffMs = new Date().getTime() - date.getTime();
+      const diffMs = now - date.getTime();
       const diffMins = Math.round(diffMs / 60000);
       if (diffMins < 1) return "Just now";
       if (diffMins < 60) return `${diffMins} mins ago`;
@@ -70,14 +106,25 @@ export async function getDashboardData(): Promise<DashboardData> {
       return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     };
 
-    const formattedUsers: UserConnection[] = activeUsers.map((user: any) => ({
-      id: user.id,
-      email: user.email,
-      deviceId: user.deviceId || "N/A",
-      status: user.isOnline ? "Connected" : "Disconnected",
-      userStatus: user.status || "Unknown",
-      lastActive: formatLastActive(user.lastActive),
-    }));
+    const formattedUsers: UserConnection[] = usersWithRealtimeStatus.map((user) => {
+      let displayStatus = "Active";
+      if (user.status === "Inactive") {
+        displayStatus = "Disabled";
+      } else {
+        displayStatus = user.isActuallyActive ? "Active" : "Inactive";
+      }
+
+      return {
+        id: user.id,
+        name: user.name || user.email.split('@')[0],
+        email: user.email,
+        deviceId: user.deviceId || "N/A",
+        connectionStatus: user.isDeviceConnected ? "Connected" : "Offline",
+        status: displayStatus,
+        role: "Commuter",
+        lastActive: formatLastActive(user.lastActive),
+      };
+    });
 
     return {
       stats: {

@@ -13,19 +13,14 @@ export default async function DashboardPage() {
   const dashboardData = await getDashboardData();
   const { stats, users } = dashboardData ?? {};
 
-  const usersData = users as any;
-  const allUsers = Array.isArray(usersData) ? usersData : (usersData?.items || []);
+  const allUsers = Array.isArray(users) ? users : [];
 
-  const commuters = allUsers.filter((user: any) => 
-    user?.role?.toLowerCase() === "commuter"
-  );
-
-  const overallUsers = commuters.length;
+  const overallUsers = allUsers.length;
   const perPage = 10;
   const currentPage = 1; 
   const pageCount = Math.max(1, Math.ceil(overallUsers / perPage));
   
-  const itemsToShow = commuters.slice(0, perPage);
+  const itemsToShow = allUsers.slice(0, perPage);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#151a23]">
@@ -46,7 +41,6 @@ export default async function DashboardPage() {
           <StatCard title="Alarms Triggered" value={stats?.alarmsTriggered ?? 0} type="alarms" href="/alarms" />
         </div>
 
-        {}
         <UserTable 
           users={itemsToShow} 
           currentPage={currentPage} 

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { ThemeToggle } from "@/components/theme-toggle";
+
 export function Sidebar() {
   const pathname = usePathname(); 
   const [user, setUser] = useState<{ email: string; role: string } | null>(null);
@@ -110,6 +112,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-6 mt-auto">
+        <ThemeToggle />
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-[#0F172A] border border-slate-700/50 flex items-center justify-center text-white font-bold">
             {initial}

@@ -23,15 +23,14 @@ export type DashboardData = {
   users: UserConnection[];
 };
 
-const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes staleness for bluetooth heartbeat
+const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 export async function getDashboardData(): Promise<DashboardData> {
   try {
     const now = Date.now();
-    const activeTripThreshold = new Date(now - 30 * 60 * 1000); // 30 mins
     const recentAlertThreshold = new Date(now - 15 * 60 * 1000); // 15 mins
 
-    const [allUsersFromDb, activeTrips, recentAlerts] = await Promise.all([
+    const [allUsersFromDb, recentAlerts] = await Promise.all([
       prisma.user.findMany({
         select: {
           id: true,
@@ -44,52 +43,40 @@ export async function getDashboardData(): Promise<DashboardData> {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.trip.findMany({
-        where: { date: { gte: activeTripThreshold } },
-        select: { userId: true },
-      }),
       prisma.userAlert.findMany({
         where: { createdAt: { gte: recentAlertThreshold } },
         select: { userId: true },
       }),
     ]);
 
-    const activeTripUserIds = new Set(activeTrips.map(t => t.userId));
     const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
 
-    // Determine multi-signal active status for each user
+    // Active = isOnline AND heartbeat is fresh (<5 mins) OR has a recent safety alert
     const usersWithRealtimeStatus = allUsersFromDb.map((user) => {
-      // If user logged out (isOnline is explicitly false), bluetooth heartbeat is inactive
-      const hasBluetoothHeartbeat = Boolean(
-        user.isOnline && user.lastActive && (now - new Date(user.lastActive).getTime() <= STALE_THRESHOLD_MS)
+      const hasActiveHeartbeat = Boolean(
+        user.isOnline &&
+        user.lastActive &&
+        (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
       );
-      const hasActiveTrip = activeTripUserIds.has(user.id);
-      const hasRecentAlert = recentAlertUserIds.has(user.id);
+      const hasRecentSafetyAlert = recentAlertUserIds.has(user.id);
 
-      // User is ONLY active if logged in (isOnline !== false) AND at least one active commute/device signal is running
-      const isActuallyActive = user.isOnline !== false && (hasBluetoothHeartbeat || hasActiveTrip || hasRecentAlert);
-      const isDeviceConnected = hasBluetoothHeartbeat && Boolean(user.deviceId);
+      const isActuallyActive = hasActiveHeartbeat || hasRecentSafetyAlert;
 
       return {
         ...user,
         isActuallyActive,
-        isDeviceConnected,
       };
     });
 
     const activeUsersCount = usersWithRealtimeStatus.filter(u => u.isActuallyActive).length;
     const registeredUsersCount = usersWithRealtimeStatus.length;
-    const connectedDevicesCount = usersWithRealtimeStatus.filter(u => u.isDeviceConnected).length;
+    const connectedDevicesCount = usersWithRealtimeStatus.filter(u => u.isActuallyActive && Boolean(u.deviceId)).length;
 
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
     const alarmsTriggeredCount = await prisma.userAlert.count({
-      where: {
-        createdAt: {
-          gte: startOfToday
-        }
-      }
+      where: { createdAt: { gte: startOfToday } }
     });
 
     const formatLastActive = (date: Date | null) => {
@@ -117,7 +104,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         name: user.name || user.email.split('@')[0],
         email: user.email,
         deviceId: user.deviceId || "N/A",
-        connectionStatus: user.isDeviceConnected ? "Connected" : "Offline",
+        connectionStatus: user.isActuallyActive ? "Connected" : "Offline",
         status: displayStatus,
         role: "Commuter",
         lastActive: formatLastActive(user.lastActive),

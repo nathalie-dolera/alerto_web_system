@@ -32,6 +32,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Your account has been disabled. Please contact support." }, { status: 403 });
     }
 
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isOnline: true,
+        lastActive: new Date(),
+      },
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       user: { id: user.id, email: user.email, name: user.name, image: user.image }

@@ -38,13 +38,14 @@ export async function POST(request: Request) {
             }
         });
         
-        if (user.status === 'Inactive') {
-            return NextResponse.json({
-                success: false,
-                error: 'Your account has been disabled. Please contact support.'
-            }, { status: 403 });
-        }
- 
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                isOnline: true,
+                lastActive: new Date(),
+            },
+        }).catch(() => {});
+
         return NextResponse.json ({
             success: true, 
             message: "User authenticated successfully",

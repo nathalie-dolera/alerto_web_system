@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'alerto-admin-secret-key-for-jwt';
-const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 async function getAuthorizedUser() {
   const cookieStore = await cookies();
@@ -28,10 +28,9 @@ export async function GET() {
     }
 
     const now = Date.now();
-    const activeTripThreshold = new Date(now - 30 * 60 * 1000); // 30 minutes
-    const recentAlertThreshold = new Date(now - 15 * 60 * 1000); // 15 minutes
+    const recentAlertThreshold = new Date(now - 15 * 60 * 1000); // 15 mins
 
-    const [users, admins, activeTrips, recentAlerts] = await Promise.all([
+    const [users, admins, recentAlerts] = await Promise.all([
       prisma.user.findMany({
         include: {
           _count: {
@@ -43,17 +42,12 @@ export async function GET() {
       prisma.admin.findMany({
         orderBy: { createdAt: 'desc' }
       }),
-      prisma.trip.findMany({
-        where: { date: { gte: activeTripThreshold } },
-        select: { userId: true },
-      }),
       prisma.userAlert.findMany({
         where: { createdAt: { gte: recentAlertThreshold } },
         select: { userId: true },
       })
     ]);
 
-    const activeTripUserIds = new Set(activeTrips.map(t => t.userId));
     const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
 
     const formattedUsers = [
@@ -70,11 +64,15 @@ export async function GET() {
         isOnline: admin.email === adminUser.email
       })),
       ...users.map(user => {
-        const hasBluetooth = Boolean(user.isOnline && user.lastActive && (now - new Date(user.lastActive).getTime() <= STALE_THRESHOLD_MS));
-        const hasActiveTrip = activeTripUserIds.has(user.id);
-        const hasRecentAlert = recentAlertUserIds.has(user.id);
+        // Active heartbeat: isOnline=true AND lastActive is fresh (within 5 mins)
+        const hasActiveHeartbeat = Boolean(
+          user.isOnline &&
+          user.lastActive &&
+          (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
+        );
+        const hasRecentSafetyAlert = recentAlertUserIds.has(user.id);
 
-        const isUserActive = user.isOnline !== false && (hasBluetooth || hasActiveTrip || hasRecentAlert);
+        const isUserActive = hasActiveHeartbeat || hasRecentSafetyAlert;
 
         return {
           id: user.id,

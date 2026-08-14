@@ -77,6 +77,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // When a trip is completed and saved, the commute monitor has stopped.
+    // Set isOnline: false so the user transitions to Inactive/Offline.
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isOnline: false,
+        lastActive: new Date(),
+      },
+    }).catch(() => {});
+
     return NextResponse.json(newTrip, { status: 201 });
   } catch (error) {
     console.error('Trip SAVE Error:', error);

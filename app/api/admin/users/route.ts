@@ -73,9 +73,8 @@ export async function GET() {
         const hasBluetooth = Boolean(user.isOnline && user.lastActive && (now - new Date(user.lastActive).getTime() <= STALE_THRESHOLD_MS));
         const hasActiveTrip = activeTripUserIds.has(user.id);
         const hasRecentAlert = recentAlertUserIds.has(user.id);
-        const hasRecentActivity = Boolean(user.lastActive && (now - new Date(user.lastActive).getTime() <= 15 * 60 * 1000));
 
-        const isUserActive = hasBluetooth || hasActiveTrip || hasRecentAlert || hasRecentActivity;
+        const isUserActive = user.isOnline !== false && (hasBluetooth || hasActiveTrip || hasRecentAlert);
 
         return {
           id: user.id,

@@ -59,17 +59,15 @@ export async function getDashboardData(): Promise<DashboardData> {
 
     // Determine multi-signal active status for each user
     const usersWithRealtimeStatus = allUsersFromDb.map((user) => {
+      // If user logged out (isOnline is explicitly false), bluetooth heartbeat is inactive
       const hasBluetoothHeartbeat = Boolean(
         user.isOnline && user.lastActive && (now - new Date(user.lastActive).getTime() <= STALE_THRESHOLD_MS)
       );
       const hasActiveTrip = activeTripUserIds.has(user.id);
       const hasRecentAlert = recentAlertUserIds.has(user.id);
-      const hasRecentActivity = Boolean(
-        user.lastActive && (now - new Date(user.lastActive).getTime() <= 15 * 60 * 1000)
-      );
 
-      // User is ACTIVE if ANY of these commute/device signals are present
-      const isActuallyActive = hasBluetoothHeartbeat || hasActiveTrip || hasRecentAlert || hasRecentActivity;
+      // User is ONLY active if logged in (isOnline !== false) AND at least one active commute/device signal is running
+      const isActuallyActive = user.isOnline !== false && (hasBluetoothHeartbeat || hasActiveTrip || hasRecentAlert);
       const isDeviceConnected = hasBluetoothHeartbeat && Boolean(user.deviceId);
 
       return {

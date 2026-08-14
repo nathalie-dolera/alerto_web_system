@@ -52,7 +52,7 @@ export async function GET() {
         isAdmin: true,
         alarmCount: 0,
         tripCount: 0,
-        isOnline: true
+        isOnline: admin.email === adminUser.email
       })),
       ...users.map(user => ({
         id: user.id,

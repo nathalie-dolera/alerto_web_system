@@ -7,50 +7,45 @@ export async function GET() {
   try {
     const usersWithDevices = await prisma.user.findMany({
       where: {
-        deviceId: {
-          not: null
-        }
+        deviceId: { not: null }
       },
       select: {
         id: true,
         email: true,
+        name: true,
         deviceId: true,
+        isOnline: true,
         lastActive: true,
-        batteryLevel: true,
-        isOnline: true
       }
     });
 
     let activeNodes = 0;
-    let lowBattery = 0;
+
+    const STALE_THRESHOLD_MS = 2 * 60 * 1000;
 
     const devices = usersWithDevices.map(user => {
-      let status = "Offline";
-      let batColor = "bg-slate-600";
-      const battery = user.batteryLevel ?? 0;
-
-      if (user.isOnline) {
-        status = "Connected";
-        activeNodes++;
-      } else if (battery <= 20) {
-        status = "Low Power";
+      let isActuallyOnline = user.isOnline;
+      if (user.isOnline && user.lastActive) {
+        const timeSinceActive = Date.now() - new Date(user.lastActive).getTime();
+        if (timeSinceActive > STALE_THRESHOLD_MS) {
+          isActuallyOnline = false;
+          prisma.user.update({
+            where: { id: user.id },
+            data: { isOnline: false }
+          }).catch(() => {});
+        }
+      } else if (user.isOnline && !user.lastActive) {
+        isActuallyOnline = false;
       }
 
-      if (battery > 50) {
-        batColor = "bg-emerald-400";
-      } else if (battery > 20) {
-        batColor = "bg-orange-400";
-      } else {
-        batColor = "bg-rose-500";
-        lowBattery++;
-      }
+      const status = isActuallyOnline ? 'Connected' : 'Offline';
+      if (isActuallyOnline) activeNodes++;
 
-      // calculate relative time
-      let lastPing = "Unknown";
+      let lastPing = 'Never';
       if (user.lastActive) {
         const diffMs = Date.now() - new Date(user.lastActive).getTime();
         const diffMins = Math.floor(diffMs / 60000);
-        if (diffMins < 1) lastPing = "Just now";
+        if (diffMins < 1) lastPing = 'Just now';
         else if (diffMins < 60) lastPing = `${diffMins} mins ago`;
         else if (diffMins < 1440) lastPing = `${Math.floor(diffMins / 60)} hours ago`;
         else lastPing = `${Math.floor(diffMins / 1440)} days ago`;
@@ -61,8 +56,6 @@ export async function GET() {
         account: user.email,
         deviceId: user.deviceId,
         lastPing,
-        battery,
-        batColor,
         status
       };
     });
@@ -72,7 +65,6 @@ export async function GET() {
       stats: {
         totalDevices: devices.length,
         activeNodes,
-        lowBattery
       }
     });
   } catch (error) {

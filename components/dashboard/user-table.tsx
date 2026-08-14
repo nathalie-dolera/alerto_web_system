@@ -42,7 +42,6 @@ export function UserTable({
               <th scope="col" className="px-6 py-4">DEVICE ID</th>
               <th scope="col" className="px-6 py-4">CONNECTION STATUS</th>
               <th scope="col" className="px-6 py-4">USER STATUS</th>
-              <th scope="col" className="px-6 py-4">LAST ACTIVE</th>
             </tr>
           </thead>
           <tbody>
@@ -71,12 +70,11 @@ export function UserTable({
                       {user?.status || "Inactive"}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{user?.lastActive || user?.joinDate || "N/A"}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
                   No commuters found.
                 </td>
               </tr>

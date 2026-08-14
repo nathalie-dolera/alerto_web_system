@@ -3,6 +3,31 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function AlarmsTable({ alarms }: { alarms: any[] }) {
 
+  function getStatusStyles(status: string) {
+    switch (status) {
+      case 'Triggered':
+        return {
+          badge: 'border-red-500/30 text-red-400 bg-red-500/10',
+          dot: 'bg-red-400',
+        };
+      case 'Pending':
+        return {
+          badge: 'border-orange-500/30 text-orange-400 bg-orange-500/10',
+          dot: 'bg-orange-400',
+        };
+      case 'Resolved':
+        return {
+          badge: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
+          dot: 'bg-emerald-400',
+        };
+      default:
+        return {
+          badge: 'border-slate-500/30 text-slate-400 bg-slate-500/10',
+          dot: 'bg-slate-400',
+        };
+    }
+  }
+
   return (
     <div className="bg-[#242F41] rounded-xl border border-slate-700/30 overflow-hidden flex flex-col mt-6">
       <div className="overflow-x-auto">
@@ -18,33 +43,48 @@ export function AlarmsTable({ alarms }: { alarms: any[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/30">
-            {alarms.map((alarm, index) => (
-              <tr key={index} className="hover:bg-slate-700/10 transition-colors">
-                <td className="px-6 py-5 text-white font-medium">{alarm.id}</td>
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${alarm.avatarBg} ${alarm.avatarText}`}>
-                      {alarm.initials}
-                    </div>
-                    <span className="text-slate-300">{alarm.name}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-5 text-slate-300">{alarm.location || 'Unknown'}</td>
-                <td className="px-6 py-5 text-slate-400">
-                  {Array.isArray(alarm.triggers) && alarm.triggers.length > 0 ? alarm.triggers.join(', ') : 'N/A'}
-                </td>
-                <td className="px-6 py-5 text-slate-400">{alarm.time}</td>
-                <td className="px-6 py-5">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-medium ${alarm.status === 'Pending'
-                      ? 'border-orange-500/30 text-orange-400 bg-orange-500/10'
-                      : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
-                    }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${alarm.status === 'Pending' ? 'bg-orange-400' : 'bg-emerald-400'}`}></span>
-                    {alarm.status}
-                  </span>
+            {alarms.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
+                  No alarms found matching your filters.
                 </td>
               </tr>
-            ))}
+            ) : (
+              alarms.map((alarm, index) => {
+                const styles = getStatusStyles(alarm.status);
+                return (
+                  <tr key={index} className="hover:bg-slate-700/10 transition-colors">
+                    <td className="px-6 py-5 text-white font-medium">{alarm.id}</td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${alarm.avatarBg} ${alarm.avatarText}`}>
+                          {alarm.initials}
+                        </div>
+                        <span className="text-slate-300">{alarm.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-slate-300 max-w-[200px]">
+                      <div className="relative group flex items-center">
+                        <span className="block truncate cursor-default">{alarm.location || 'Unknown'}</span>
+                        <div className="absolute left-0 top-full mt-1 hidden group-hover:block w-max max-w-xs bg-slate-800 text-white text-xs rounded p-2 z-50 shadow-lg border border-slate-700/50 whitespace-normal break-words">
+                          {alarm.location || 'Unknown'}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-slate-400">
+                      {Array.isArray(alarm.triggers) && alarm.triggers.length > 0 ? alarm.triggers.join(', ') : 'N/A'}
+                    </td>
+                    <td className="px-6 py-5 text-slate-400">{alarm.time}</td>
+                    <td className="px-6 py-5">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-medium ${styles.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`}></span>
+                        {alarm.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
@@ -59,3 +99,4 @@ export function AlarmsTable({ alarms }: { alarms: any[] }) {
     </div>
   );
 }
+

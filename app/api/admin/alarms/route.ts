@@ -10,6 +10,16 @@ function initialsFromName(name: string) {
     .join('') || 'AU';
 }
 
+const TRIGGER_LABELS: Record<string, string> = {
+  IDLE_TIME: 'Idle Time Exceeded',
+  OFF_ROUTE: 'Route Deviation',
+  MOVEMENT_LOSS: 'Movement Signal Lost',
+};
+
+function formatTrigger(raw: string): string {
+  return TRIGGER_LABELS[raw] || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 export async function GET() {
   try {
     const trips = await prisma.trip.findMany({
@@ -36,25 +46,34 @@ export async function GET() {
       take: 100,
     });
 
-    const alarms = trips.map((trip) => {
+    const alarms = trips.map((trip, index) => {
       const userName = trip.user?.name || trip.user?.email || 'Alerto User';
       const timeSource = trip.sosTriggeredAt || trip.suspiciousAt || trip.date;
-      const status = trip.safetyStatus === 'SOS-Triggered' ? 'Triggered' : 'Pending';
+
+      let status: string;
+      if (trip.safetyStatus === 'SOS-Triggered') {
+        status = 'Triggered';
+      } else if (trip.safetyStatus === 'Suspicious') {
+        status = 'Pending';
+      } else {
+        status = 'Resolved';
+      }
 
       return {
-        id: `AL-${trip.id.slice(-6).toUpperCase()}`,
+        id: `AL-2026${index + 1}`,
         tripId: trip.id,
         initials: initialsFromName(userName),
         name: userName,
         location: trip.destinationName,
-        triggers: trip.anomalyTriggers,
+        triggers: (trip.anomalyTriggers || []).map(formatTrigger),
+        rawTime: new Date(timeSource).toISOString(),
         time: new Date(timeSource).toLocaleString('en-PH', {
           dateStyle: 'medium',
           timeStyle: 'short',
         }),
         status,
-        avatarBg: status === 'Triggered' ? 'bg-red-950' : 'bg-orange-950',
-        avatarText: status === 'Triggered' ? 'text-red-300' : 'text-orange-300',
+        avatarBg: status === 'Triggered' ? 'bg-red-950' : status === 'Pending' ? 'bg-orange-950' : 'bg-slate-800',
+        avatarText: status === 'Triggered' ? 'text-red-300' : status === 'Pending' ? 'text-orange-300' : 'text-slate-400',
       };
     });
 

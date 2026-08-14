@@ -75,12 +75,8 @@ export function useUsers() {
       
       if (user.status === 'Inactive') {
         displayStatus = 'Disabled';
-      } else if (!user.isAdmin) {
-        // Commuters
-        displayStatus = user.isOnline ? 'Active' : 'Inactive';
       } else {
-        // Admins
-        displayStatus = 'Active';
+        displayStatus = user.isOnline ? 'Active' : 'Inactive';
       }
 
       const matchesSearch = 

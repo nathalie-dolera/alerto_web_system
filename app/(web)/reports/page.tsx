@@ -24,6 +24,8 @@ export default function ReportsPage() {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
     let cancelled = false;
 
     async function loadAnalysis() {
@@ -32,6 +34,7 @@ export default function ReportsPage() {
       try {
         const response = await fetch(`/api/admin/reports/analysis?tab=${encodeURIComponent(activeTab)}`, {
           cache: "no-store",
+          signal,
         });
 
         if (!response.ok) {
@@ -52,7 +55,11 @@ export default function ReportsPage() {
           }
           setAnalysisStatus("idle");
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          console.log('Fetch aborted');
+          return;
+        }
         console.error("Failed to load AI report analysis", error);
         if (!cancelled) setAnalysisStatus("error");
       }
@@ -62,6 +69,7 @@ export default function ReportsPage() {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [activeTab]);
 

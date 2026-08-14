@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { User } from "@/hooks/useUsers";
 
 interface UsersTableProps {
@@ -12,6 +13,18 @@ interface UsersTableProps {
 }
 
 export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loading, onUpdatePassword }: UsersTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const totalPages = Math.max(1, Math.ceil(users.length / itemsPerPage));
+  const paginatedUsers = users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const startIndex = users.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endIndex = Math.min(currentPage * itemsPerPage, users.length);
+
+  const goToPrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const goToNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+
   if (loading) {
     return (
       <div className="bg-[#242F41] rounded-xl border border-slate-700/30 p-12 flex flex-col items-center justify-center mt-6">
@@ -45,7 +58,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/30">
-            {users.map((user) => {
+            {paginatedUsers.map((user) => {
               let displayStatus = 'Active';
               if (user.status === 'Inactive') {
                 displayStatus = 'Disabled';
@@ -136,10 +149,24 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
         </table>
       </div>
       <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
-        <span className="text-sm text-slate-400">Showing {users.length > 0 ? 1 : 0} to {users.length} of {totalUsers} users</span>
+        <span className="text-sm text-slate-400">
+          Showing {startIndex} to {endIndex} of {users.length} users
+        </span>
         <div className="flex gap-2">
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg></button>
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button 
+            onClick={goToPrev}
+            disabled={currentPage === 1}
+            className={`w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 transition-colors ${currentPage === 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white cursor-pointer'}`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button 
+            onClick={goToNext}
+            disabled={currentPage === totalPages}
+            className={`w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 transition-colors ${currentPage === totalPages ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white cursor-pointer'}`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
       </div>
     </div>

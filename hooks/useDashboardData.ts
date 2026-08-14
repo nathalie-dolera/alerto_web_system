@@ -23,14 +23,16 @@ export type DashboardData = {
   users: UserConnection[];
 };
 
-const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes for Bluetooth/live heartbeat
+const RECENT_TRIP_WINDOW_MS = 10 * 60 * 1000; // 10 minutes - recent trip means commute was just active
 
 export async function getDashboardData(): Promise<DashboardData> {
   try {
     const now = Date.now();
-    const recentAlertThreshold = new Date(now - 15 * 60 * 1000); // 15 mins
+    const recentTripThreshold = new Date(now - RECENT_TRIP_WINDOW_MS);
+    const recentAlertThreshold = new Date(now - 15 * 60 * 1000);
 
-    const [allUsersFromDb, recentAlerts] = await Promise.all([
+    const [allUsersFromDb, recentTrips, recentAlerts] = await Promise.all([
       prisma.user.findMany({
         select: {
           id: true,
@@ -43,24 +45,32 @@ export async function getDashboardData(): Promise<DashboardData> {
         },
         orderBy: { createdAt: 'desc' },
       }),
+      prisma.trip.findMany({
+        where: { date: { gte: recentTripThreshold } },
+        select: { userId: true },
+      }),
       prisma.userAlert.findMany({
         where: { createdAt: { gte: recentAlertThreshold } },
         select: { userId: true },
       }),
     ]);
 
+    const recentTripUserIds = new Set(recentTrips.map(t => t.userId));
     const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
 
-    // Active = isOnline AND heartbeat is fresh (<5 mins) OR has a recent safety alert
     const usersWithRealtimeStatus = allUsersFromDb.map((user) => {
-      const hasActiveHeartbeat = Boolean(
+      // Live heartbeat: isOnline=true AND lastActive fresh within 5 mins
+      const hasLiveHeartbeat = Boolean(
         user.isOnline &&
         user.lastActive &&
         (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
       );
-      const hasRecentSafetyAlert = recentAlertUserIds.has(user.id);
+      // Recent commute: a trip was saved within the last 10 minutes (commute just ended or is wrapping up)
+      const hasRecentTrip = recentTripUserIds.has(user.id);
+      // Safety alert in last 15 mins
+      const hasRecentAlert = recentAlertUserIds.has(user.id);
 
-      const isActuallyActive = hasActiveHeartbeat || hasRecentSafetyAlert;
+      const isActuallyActive = hasLiveHeartbeat || hasRecentTrip || hasRecentAlert;
 
       return {
         ...user,

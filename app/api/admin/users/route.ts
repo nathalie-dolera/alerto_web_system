@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'alerto-admin-secret-key-for-jwt';
-const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000;
+const RECENT_TRIP_WINDOW_MS = 10 * 60 * 1000;
 
 async function getAuthorizedUser() {
   const cookieStore = await cookies();
@@ -28,9 +29,10 @@ export async function GET() {
     }
 
     const now = Date.now();
-    const recentAlertThreshold = new Date(now - 15 * 60 * 1000); // 15 mins
+    const recentTripThreshold = new Date(now - RECENT_TRIP_WINDOW_MS);
+    const recentAlertThreshold = new Date(now - 15 * 60 * 1000);
 
-    const [users, admins, recentAlerts] = await Promise.all([
+    const [users, admins, recentTrips, recentAlerts] = await Promise.all([
       prisma.user.findMany({
         include: {
           _count: {
@@ -42,12 +44,17 @@ export async function GET() {
       prisma.admin.findMany({
         orderBy: { createdAt: 'desc' }
       }),
+      prisma.trip.findMany({
+        where: { date: { gte: recentTripThreshold } },
+        select: { userId: true },
+      }),
       prisma.userAlert.findMany({
         where: { createdAt: { gte: recentAlertThreshold } },
         select: { userId: true },
       })
     ]);
 
+    const recentTripUserIds = new Set(recentTrips.map(t => t.userId));
     const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
 
     const formattedUsers = [
@@ -64,15 +71,15 @@ export async function GET() {
         isOnline: admin.email === adminUser.email
       })),
       ...users.map(user => {
-        // Active heartbeat: isOnline=true AND lastActive is fresh (within 5 mins)
-        const hasActiveHeartbeat = Boolean(
+        const hasLiveHeartbeat = Boolean(
           user.isOnline &&
           user.lastActive &&
           (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
         );
-        const hasRecentSafetyAlert = recentAlertUserIds.has(user.id);
+        const hasRecentTrip = recentTripUserIds.has(user.id);
+        const hasRecentAlert = recentAlertUserIds.has(user.id);
 
-        const isUserActive = hasActiveHeartbeat || hasRecentSafetyAlert;
+        const isUserActive = hasLiveHeartbeat || hasRecentTrip || hasRecentAlert;
 
         return {
           id: user.id,

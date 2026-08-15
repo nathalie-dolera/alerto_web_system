@@ -23,10 +23,7 @@ async function getAuthorizedUser() {
 export async function GET() {
   try {
     const adminUser = await getAuthorizedUser();
-
-    if (!adminUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const currentAdminEmail = adminUser?.email || '';
 
     const now = Date.now();
     const recentTripThreshold = new Date(now - RECENT_TRIP_WINDOW_MS);
@@ -68,7 +65,7 @@ export async function GET() {
         isAdmin: true,
         alarmCount: 0,
         tripCount: 0,
-        isOnline: admin.email === adminUser.email
+        isOnline: admin.email === currentAdminEmail
       })),
       ...users.map(user => {
         const hasLiveHeartbeat = Boolean(

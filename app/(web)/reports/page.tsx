@@ -75,12 +75,17 @@ export default function ReportsPage() {
 
   const getTableData = () => {
     const trips = currentSnapshot.recentTrips || [];
-    return trips.map((trip: any) => ({
-      id: `TRP-${trip.id}`,
-      description: `Trip to ${trip.destinationName || 'Unknown'} (${trip.durationMinutes} mins) - ${trip.anomalyCount} anomalies.`,
-      date: new Date(trip.date).toLocaleString(),
-      status: trip.safetyStatus === 'Suspicious' ? 'Caution' : trip.safetyStatus === 'SOS-Triggered' ? 'Emergency' : trip.anomalyCount > 0 ? 'Notice' : 'Normal',
-    }));
+    return trips.map((trip: any, index: number) => {
+      const tripDate = trip.date ? new Date(trip.date) : new Date();
+      const tripYear = isNaN(tripDate.getTime()) ? 2026 : tripDate.getFullYear();
+      const count = index + 1;
+      return {
+        id: `TRP-${tripYear}${count}`,
+        description: `Trip to ${trip.destinationName || 'Unknown'} (${trip.durationMinutes} mins) - ${trip.anomalyCount} anomalies.`,
+        date: new Date(trip.date).toLocaleString(),
+        status: trip.safetyStatus === 'Suspicious' ? 'Caution' : trip.safetyStatus === 'SOS-Triggered' ? 'Emergency' : trip.anomalyCount > 0 ? 'Notice' : 'Normal',
+      };
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -142,8 +147,8 @@ export default function ReportsPage() {
           ))}
         </div>
 
-        {/* AI Insight Card */}
-        {currentAiInsight && (
+        {/* AI Insight Card for standard tabs */}
+        {currentAiInsight && activeTab !== "Device Metrics" && (
           <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-[#1B2435] border border-indigo-500/30 rounded-xl p-6 mb-6 relative overflow-hidden group">
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-all duration-700"></div>
             <div className="flex items-start gap-4 relative z-10">
@@ -269,28 +274,77 @@ export default function ReportsPage() {
               );
             case "Device Metrics":
               return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center relative overflow-hidden group hover:border-blue-500/50 transition-colors">
-                       <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-colors"></div>
-                       <div className="flex items-center justify-between mb-4 relative z-10">
-                          <h4 className="text-slate-400 text-sm font-medium">Total Connected Devices</h4>
-                          <div className="p-2 bg-blue-500/10 rounded-lg">
-                            <svg className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                          </div>
-                       </div>
-                       <span className="text-4xl font-bold text-white relative z-10">{currentSnapshot.connectedDevicesCount ?? 0}</span>
-                       <span className="text-xs text-slate-400 mt-3 relative z-10">Out of {currentSnapshot.totalDevices ?? 0} registered devices</span>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                   {/* Alerto AI Data Compilation */}
+                   <div className="lg:col-span-2 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-[#1B2435] border border-indigo-500/30 rounded-xl p-6 relative overflow-hidden group flex flex-col justify-between shadow-[0_0_10px_rgba(99,102,241,0.05)]">
+                      <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-all duration-700"></div>
+                      <div className="flex items-start gap-4 relative z-10">
+                         <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-1 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                         </div>
+                         <div className="flex-1">
+                            <h3 className="text-lg font-bold text-white mb-2 flex items-center flex-wrap gap-2">
+                               Alerto AI Data Compilation
+                               <span className="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 tracking-wider">AUTO-GENERATED</span>
+                               {currentAnalysisMeta && (
+                                 <span className="text-[10px] font-semibold bg-slate-700/60 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600 tracking-wider">
+                                   {currentAnalysisMeta.generatedBy === "gemini" ? "GEMINI" : "LOCAL FALLBACK"}
+                                 </span>
+                               )}
+                               {analysisStatus === "loading" && (
+                                 <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30 tracking-wider">REFRESHING</span>
+                               )}
+                            </h3>
+                            <p className="text-slate-300 text-sm mb-4 leading-relaxed">
+                              {currentAiInsight?.compilation || 'Recent device metrics are being analyzed for connection stability and hardware activity.'}
+                            </p>
+                            <div className="bg-[#0F172A]/60 border border-indigo-500/20 rounded-lg p-4 shadow-inner">
+                               <h4 className="text-xs font-semibold text-indigo-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                 AI Recommendation
+                               </h4>
+                               <p className="text-sm text-slate-300">
+                                 {currentAiInsight?.recommendation || 'Ensure users maintain active Bluetooth bag tag connection during commutes to keep real-time tracking responsive.'}
+                               </p>
+                            </div>
+                            {analysisStatus === "error" && (
+                              <p className="text-xs text-amber-300 mt-3">
+                                Live Gemini analysis is unavailable right now, so the report is showing the saved baseline insight.
+                              </p>
+                            )}
+                         </div>
+                      </div>
                    </div>
-                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center relative overflow-hidden group hover:border-red-500/50 transition-colors">
-                       <div className="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-xl group-hover:bg-red-500/20 transition-colors"></div>
-                       <div className="flex items-center justify-between mb-4 relative z-10">
-                          <h4 className="text-slate-400 text-sm font-medium">Low Battery Warnings</h4>
-                          <div className="p-2 bg-red-500/10 rounded-lg relative flex items-center justify-center w-9 h-9">
-                            <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>
-                          </div>
+
+                   {/* Total Connected Devices */}
+                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-blue-500/50 transition-colors shadow-[0_0_10px_rgba(59,130,246,0.05)]">
+                       <div className="absolute -right-4 -top-4 w-28 h-28 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-colors"></div>
+                       <div>
+                         <div className="flex items-center justify-between mb-4 relative z-10">
+                            <h4 className="text-slate-400 text-sm font-medium">Total Connected Devices</h4>
+                            <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
+                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                            </div>
+                         </div>
+                         <div className="relative z-10">
+                           <span className="text-5xl font-bold text-white tracking-tight">{currentSnapshot.connectedDevicesCount ?? 0}</span>
+                         </div>
                        </div>
-                       <span className="text-4xl font-bold text-white relative z-10">{currentSnapshot.lowBatteryUsersCount ?? 0}</span>
-                       <span className="text-xs text-slate-400 mt-3 relative z-10">Devices below 20% battery</span>
+                       <div className="pt-6 relative z-10 border-t border-slate-700/40 mt-6">
+                         <div className="flex items-center justify-between text-xs mb-2">
+                           <span className="text-slate-400">Connection Rate</span>
+                           <span className="text-blue-400 font-semibold">
+                             {Math.round(((currentSnapshot.connectedDevicesCount ?? 0) / Math.max(1, currentSnapshot.totalDevices ?? 1)) * 100)}%
+                           </span>
+                         </div>
+                         <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden mb-2">
+                           <div 
+                             className="bg-blue-500 h-full rounded-full transition-all duration-1000" 
+                             style={{ width: `${Math.min(100, ((currentSnapshot.connectedDevicesCount ?? 0) / Math.max(1, currentSnapshot.totalDevices ?? 1)) * 100)}%` }}
+                           ></div>
+                         </div>
+                         <span className="text-xs text-slate-400">Out of {currentSnapshot.totalDevices ?? 0} registered devices</span>
+                       </div>
                    </div>
                 </div>
               );

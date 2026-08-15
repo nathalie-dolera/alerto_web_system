@@ -101,8 +101,8 @@ function buildFallbackAnalysis(tab: ReportTab, snapshot: Record<string, unknown>
     case 'Device Metrics':
       return {
         ...generatedBase,
-        compilation: `Device metrics show ${(snapshot.totalDevices as number) ?? 0} registered devices, with ${(snapshot.connectedDevicesCount as number) ?? 0} currently connected and ${(snapshot.lowBatteryUsersCount as number) ?? 0} reporting low battery.`,
-        recommendation: 'Flag offline or low-battery devices for user prompts so trip monitoring remains reliable during active commutes.',
+        compilation: `Device metrics show ${(snapshot.totalDevices as number) ?? 0} registered devices, with ${(snapshot.connectedDevicesCount as number) ?? 0} currently connected.`,
+        recommendation: 'Ensure users maintain active Bluetooth bag tag connection during commutes to keep real-time tracking responsive.',
       };
     default:
       return {
@@ -175,8 +175,8 @@ async function buildReportSnapshot(tab: ReportTab) {
     anomalyTripsCount: anomalyTrips.length,
     averageResponseTimeMs: getAverageResponseTime(recentTrips),
     topAnomalyTriggers: getTopTrigger(recentTrips),
-    recentTrips: recentTrips.slice(0, 10).map((trip) => ({
-      id: trip.id.slice(-6).toUpperCase(),
+    recentTrips: recentTrips.slice(0, 50).map((trip, idx) => ({
+      id: `${new Date(trip.date).getFullYear()}${idx + 1}`,
       date: trip.date.toISOString(),
       destinationName: trip.destinationName,
       durationMinutes: Math.round(trip.durationMs / 60000),

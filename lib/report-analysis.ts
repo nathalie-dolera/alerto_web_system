@@ -127,6 +127,7 @@ async function buildReportSnapshot(tab: ReportTab) {
     activeHazardsCount,
     hazardHistoryLast30Days,
     recentTrips,
+    usersWithDevices,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { isOnline: true } }),
@@ -154,11 +155,37 @@ async function buildReportSnapshot(tab: ReportTab) {
       orderBy: { date: 'desc' },
       take: 50,
     }),
+    prisma.user.findMany({
+      where: { deviceId: { not: null } },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        deviceId: true,
+        isOnline: true,
+        lastActive: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
 
   const anomalyTrips = recentTrips.filter(
     (trip) => trip.anomalyCount > 0 || trip.safetyStatus === 'Suspicious' || trip.safetyStatus === 'SOS-Triggered'
   );
+
+  const devicesList = (usersWithDevices || []).map((u) => {
+    const isConnected = Boolean(
+      u.isOnline &&
+      u.lastActive &&
+      (Date.now() - new Date(u.lastActive).getTime() <= 5 * 60 * 1000)
+    );
+    return {
+      id: u.id,
+      account: u.email,
+      deviceId: u.deviceId,
+      status: isConnected ? 'Connected' : 'Offline',
+    };
+  });
 
   return {
     tab,
@@ -175,6 +202,7 @@ async function buildReportSnapshot(tab: ReportTab) {
     anomalyTripsCount: anomalyTrips.length,
     averageResponseTimeMs: getAverageResponseTime(recentTrips),
     topAnomalyTriggers: getTopTrigger(recentTrips),
+    devicesList,
     recentTrips: recentTrips.slice(0, 50).map((trip, idx) => ({
       id: `${new Date(trip.date).getFullYear()}${idx + 1}`,
       date: trip.date.toISOString(),

@@ -18,6 +18,39 @@ export default function ReportsPage() {
   const [analysisByTab, setAnalysisByTab] = useState<Record<string, ReportAnalysis>>({});
   const [snapshotByTab, setSnapshotByTab] = useState<Record<string, any>>({});
   const [analysisStatus, setAnalysisStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  async function handleDeleteDevice(userId: string) {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch("/api/admin/devices/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      if (res.ok) {
+        setSnapshotByTab(prev => {
+          const current = prev["Device Metrics"];
+          if (!current) return prev;
+          const updatedDevices = (current.devicesList || []).filter((d: any) => d.id !== userId);
+          return {
+            ...prev,
+            ["Device Metrics"]: {
+              ...current,
+              devicesList: updatedDevices,
+              totalDevices: Math.max(0, (current.totalDevices || 1) - 1),
+            }
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Failed to delete device", err);
+    } finally {
+      setDeleteLoading(false);
+      setDeleteTarget(null);
+    }
+  }
 
   useEffect(() => {
     document.title = "Alerto | Reports";
@@ -354,43 +387,135 @@ export default function ReportsPage() {
         })()}
 
         {/* Source Data Activity Table */}
-        <div className="bg-[#1B2435] border border-indigo-500/30 rounded-xl overflow-hidden mt-6 relative shadow-[0_0_10px_rgba(99,102,241,0.05)]">
-          <div className="px-6 py-5 border-b border-slate-700/50 flex justify-between items-center bg-indigo-500/5">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-               <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-               Data Points Analyzed by AI ({activeTab})
-            </h3>
-            <button className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors font-medium">View Full Source Log</button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-[#0F172A]/80 text-slate-400 border-b border-slate-700/50">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Data Point ID</th>
-                  <th className="px-6 py-4 font-medium">Source Event Description</th>
-                  <th className="px-6 py-4 font-medium">Timestamp</th>
-                  <th className="px-6 py-4 font-medium">Tag</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/50 text-slate-300 bg-[#0F172A]/30">
-                {getTableData().map((row: any, index: number) => (
-                  <tr key={index} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-400">{row.id}</td>
-                    <td className="px-6 py-4">{row.description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-500">{row.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getStatusColor(row.status)}`}>
-                        {row.status}
-                      </span>
-                    </td>
+        {activeTab === "Device Metrics" ? (
+          <div className="bg-[#242F41] rounded-xl border border-slate-700/30 overflow-hidden flex flex-col mt-6 shadow-[0_0_10px_rgba(59,130,246,0.03)]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="text-xs font-semibold text-slate-400 bg-[#1B2435]/50 border-b border-slate-700/30">
+                  <tr>
+                    <th className="px-6 py-4">ACCOUNT</th>
+                    <th className="px-6 py-4">DEVICE ID</th>
+                    <th className="px-6 py-4">CONNECTION</th>
+                    <th className="px-6 py-4 text-center">MANAGE</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-700/30">
+                  {(currentSnapshot.devicesList || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
+                        No registered devices found.
+                      </td>
+                    </tr>
+                  ) : (
+                    (currentSnapshot.devicesList || []).map((dev: any) => (
+                      <tr key={dev.id} className="hover:bg-slate-700/10 transition-colors">
+                        <td className="px-6 py-5 text-white font-medium">{dev.account || '—'}</td>
+                        <td className="px-6 py-5 text-white font-medium">{dev.deviceId || '—'}</td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${dev.status === 'Connected' ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
+                            <span className={dev.status === 'Connected' ? 'text-emerald-400' : 'text-slate-400'}>{dev.status}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center justify-center">
+                            <button
+                              onClick={() => setDeleteTarget(dev.id)}
+                              disabled={deleteLoading}
+                              className="text-slate-400 hover:text-rose-400 transition-colors p-1.5 rounded-md hover:bg-rose-500/10 cursor-pointer"
+                              title="Delete Device"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
+              <span className="text-sm text-slate-400">
+                Showing {(currentSnapshot.devicesList || []).length > 0 ? 1 : 0} to {(currentSnapshot.devicesList || []).length} of {(currentSnapshot.devicesList || []).length} devices
+              </span>
+              <div className="flex gap-2">
+                <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg></button>
+                <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-[#1B2435] border border-indigo-500/30 rounded-xl overflow-hidden mt-6 relative shadow-[0_0_10px_rgba(99,102,241,0.05)]">
+            <div className="px-6 py-5 border-b border-slate-700/50 flex justify-between items-center bg-indigo-500/5">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                 <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                 Data Points Analyzed by AI ({activeTab})
+              </h3>
+              <button className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors font-medium">View Full Source Log</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-[#0F172A]/80 text-slate-400 border-b border-slate-700/50">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Data Point ID</th>
+                    <th className="px-6 py-4 font-medium">Source Event Description</th>
+                    <th className="px-6 py-4 font-medium">Timestamp</th>
+                    <th className="px-6 py-4 font-medium">Tag</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/50 text-slate-300 bg-[#0F172A]/30">
+                  {getTableData().map((row: any, index: number) => (
+                    <tr key={index} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-400">{row.id}</td>
+                      <td className="px-6 py-4">{row.description}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-500">{row.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getStatusColor(row.status)}`}>
+                          {row.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
       </main>
+
+      {/* Delete Confirmation Modal for Device Metrics */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1B2435] border border-slate-700/50 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </div>
+              <h3 className="text-lg font-semibold text-white">Delete Device</h3>
+            </div>
+            <p className="text-slate-400 text-sm mb-6">
+              Are you sure you want to remove this device? This will clear the device ID from the user&apos;s account.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white bg-slate-700/30 hover:bg-slate-700/50 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteDevice(deleteTarget)}
+                disabled={deleteLoading}
+                className={`px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition-colors cursor-pointer ${deleteLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete Device'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

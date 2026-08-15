@@ -75,14 +75,22 @@ export function useUsers() {
       
       if (user.status === 'Inactive') {
         displayStatus = 'Disabled';
+      } else if (user.isAdmin) {
+        displayStatus = 'Active';
       } else {
         displayStatus = user.isOnline ? 'Active' : 'Inactive';
       }
 
+      const name = (user.name || '').toLowerCase();
+      const email = (user.email || '').toLowerCase();
+      const role = (user.role || '').toLowerCase();
+      const query = (searchQuery || '').toLowerCase();
+
       const matchesSearch = 
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.role.toLowerCase().includes(searchQuery.toLowerCase());
+        !query ||
+        name.includes(query) || 
+        email.includes(query) ||
+        role.includes(query);
       
       const matchesTab = activeTab === "All Users" || displayStatus === activeTab;
       

@@ -38,7 +38,7 @@ export function UserTable({ users }: UserTableProps) {
             <tr>
               <th scope="col" className="px-6 py-4">USER NAME</th>
               <th scope="col" className="px-6 py-4">DEVICE ID</th>
-              <th scope="col" className="px-6 py-4">CONNECTION STATUS</th>
+              <th scope="col" className="px-6 py-4">TRIPS TODAY</th>
               <th scope="col" className="px-6 py-4">USER STATUS</th>
             </tr>
           </thead>
@@ -53,9 +53,12 @@ export function UserTable({ users }: UserTableProps) {
                   <td className="px-6 py-5 text-white font-medium">{user?.deviceId || "N/A"}</td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${user?.connectionStatus === 'Connected' ? 'bg-emerald-400' : 'bg-slate-500'}`}></div>
-                      <span className={user?.connectionStatus === 'Connected' ? 'text-emerald-400' : 'text-slate-400'}>
-                        {user?.connectionStatus || "Offline"}
+                      <span className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-xs font-bold ${
+                        (user?.tripsToday ?? 0) > 0
+                          ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                          : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                      }`}>
+                        {user?.tripsToday ?? 0}
                       </span>
                     </div>
                   </td>

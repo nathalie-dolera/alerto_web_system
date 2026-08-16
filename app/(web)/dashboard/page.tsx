@@ -32,8 +32,8 @@ export default function DashboardPage() {
     // Initial fetch
     fetchData();
 
-    // Poll every 30 seconds
-    const interval = setInterval(fetchData, 30000);
+    // Poll every 10 seconds to match mobile app heartbeat frequency
+    const interval = setInterval(fetchData, 10000);
 
     return () => {
       isMounted = false;

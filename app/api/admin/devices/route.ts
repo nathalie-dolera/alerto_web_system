@@ -21,18 +21,15 @@ export async function GET() {
 
     let activeNodes = 0;
 
-    const STALE_THRESHOLD_MS = 2 * 60 * 1000;
+    const STALE_THRESHOLD_MS = 30 * 1000; // 30 seconds — mobile app heartbeats every 10s
 
     const devices = usersWithDevices.map(user => {
+      // Determine online status for display only — do NOT write to DB from a GET endpoint
       let isActuallyOnline = user.isOnline;
       if (user.isOnline && user.lastActive) {
         const timeSinceActive = Date.now() - new Date(user.lastActive).getTime();
         if (timeSinceActive > STALE_THRESHOLD_MS) {
           isActuallyOnline = false;
-          prisma.user.update({
-            where: { id: user.id },
-            data: { isOnline: false }
-          }).catch(() => {});
         }
       } else if (user.isOnline && !user.lastActive) {
         isActuallyOnline = false;

@@ -21,6 +21,9 @@ export function useAlarms() {
       }
     }
     fetchAlarms();
+
+    const interval = setInterval(fetchAlarms, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   return { alarms, loading };

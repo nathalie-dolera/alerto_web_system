@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'alerto-admin-secret-key-for-jwt';
-const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000;
+const HEARTBEAT_THRESHOLD_MS = 30 * 1000; // 30 seconds — mobile app heartbeats every 10s
 const RECENT_TRIP_WINDOW_MS = 10 * 60 * 1000;
 
 async function getAuthorizedUser() {

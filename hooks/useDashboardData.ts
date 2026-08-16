@@ -5,7 +5,7 @@ export type UserConnection = {
   name: string;
   email: string;
   deviceId: string;
-  connectionStatus: "Connected" | "Offline";
+  tripsToday: number;
   status: string;
   role: string;
   lastActive: string;
@@ -23,7 +23,7 @@ export type DashboardData = {
   users: UserConnection[];
 };
 
-const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes for Bluetooth/live heartbeat
+const HEARTBEAT_THRESHOLD_MS = 30 * 1000; // 30 seconds — mobile app heartbeats every 10s
 const RECENT_TRIP_WINDOW_MS = 10 * 60 * 1000; // 10 minutes - recent trip means commute was just active
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -32,7 +32,10 @@ export async function getDashboardData(): Promise<DashboardData> {
     const recentTripThreshold = new Date(now - RECENT_TRIP_WINDOW_MS);
     const recentAlertThreshold = new Date(now - 15 * 60 * 1000);
 
-    const [allUsersFromDb, recentTrips, recentAlerts] = await Promise.all([
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const [allUsersFromDb, recentTrips, recentAlerts, todaysTrips] = await Promise.all([
       prisma.user.findMany({
         select: {
           id: true,
@@ -53,10 +56,21 @@ export async function getDashboardData(): Promise<DashboardData> {
         where: { createdAt: { gte: recentAlertThreshold } },
         select: { userId: true },
       }),
+      // Fetch all trips created today for the "Trips Today" column
+      prisma.trip.findMany({
+        where: { date: { gte: startOfToday } },
+        select: { userId: true },
+      }),
     ]);
 
     const recentTripUserIds = new Set(recentTrips.map(t => t.userId));
     const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
+
+    // Count trips today per user
+    const tripsTodayByUser = new Map<string, number>();
+    for (const trip of todaysTrips) {
+      tripsTodayByUser.set(trip.userId, (tripsTodayByUser.get(trip.userId) || 0) + 1);
+    }
 
     const usersWithRealtimeStatus = allUsersFromDb.map((user) => {
       // If user is marked isOnline=false, they are immediately Offline/Inactive
@@ -67,7 +81,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         };
       }
 
-      // If user is isOnline=true, verify lastActive is within 5 minutes
+      // If user is isOnline=true, verify lastActive is within the heartbeat threshold
       const isFresh = user.lastActive 
         ? (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
         : true;
@@ -81,9 +95,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     const activeUsersCount = usersWithRealtimeStatus.filter(u => u.isActuallyActive).length;
     const registeredUsersCount = usersWithRealtimeStatus.length;
     const connectedDevicesCount = usersWithRealtimeStatus.filter(u => u.isActuallyActive && Boolean(u.deviceId)).length;
-
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
 
     const alarmsTriggeredCount = await prisma.userAlert.count({
       where: { createdAt: { gte: startOfToday } }
@@ -114,7 +125,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         name: user.name || user.email.split('@')[0],
         email: user.email,
         deviceId: user.deviceId || "N/A",
-        connectionStatus: user.isActuallyActive ? "Connected" : "Offline",
+        tripsToday: tripsTodayByUser.get(user.id) || 0,
         status: displayStatus,
         role: "Commuter",
         lastActive: formatLastActive(user.lastActive),

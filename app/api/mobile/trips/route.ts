@@ -52,30 +52,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const newTrip = await prisma.trip.create({
-      data: {
-        destinationName,
-        durationMs,
-        alertsTriggeredCount,
-        responseTimes: Array.isArray(responseTimes) ? responseTimes : [],
-        unsafeZonesEncountered: Array.isArray(unsafeZonesEncountered) ? unsafeZonesEncountered : [],
-        safetyStatus: safetyStatus || 'Normal',
-        anomalyCount: typeof anomalyCount === 'number' ? anomalyCount : 0,
-        anomalyTriggers: Array.isArray(anomalyTriggers) ? anomalyTriggers : [],
-        suspiciousAt: suspiciousAt ? new Date(suspiciousAt) : null,
-        sosTriggeredAt: sosTriggeredAt ? new Date(sosTriggeredAt) : null,
-        lastKnownLat: typeof lastKnownLat === 'number' ? lastKnownLat : null,
-        lastKnownLng: typeof lastKnownLng === 'number' ? lastKnownLng : null,
-        routeRecognitionStatus: routeRecognitionStatus || 'Planned Route',
-        routeRefreshCount: typeof routeRefreshCount === 'number' ? routeRefreshCount : 0,
+    const tripDate = date ? new Date(date) : new Date();
+
+    // Check if an in-progress active trip already exists near this start date
+    const startRange = new Date(tripDate.getTime() - 10000);
+    const endRange = new Date(tripDate.getTime() + 10000);
+
+    const existingTrip = await prisma.trip.findFirst({
+      where: {
         userId,
-        driverName,
-        plateNumber,
-        bookingType,
-        screenshotUrl,
-        date: date ? new Date(date) : new Date(),
+        date: {
+          gte: startRange,
+          lte: endRange,
+        },
       },
     });
+
+    let tripRecord;
+
+    const tripDataPayload = {
+      destinationName,
+      durationMs,
+      alertsTriggeredCount,
+      responseTimes: Array.isArray(responseTimes) ? responseTimes : [],
+      unsafeZonesEncountered: Array.isArray(unsafeZonesEncountered) ? unsafeZonesEncountered : [],
+      safetyStatus: safetyStatus || 'Normal',
+      anomalyCount: typeof anomalyCount === 'number' ? anomalyCount : 0,
+      anomalyTriggers: Array.isArray(anomalyTriggers) ? anomalyTriggers : [],
+      suspiciousAt: suspiciousAt ? new Date(suspiciousAt) : null,
+      sosTriggeredAt: sosTriggeredAt ? new Date(sosTriggeredAt) : null,
+      lastKnownLat: typeof lastKnownLat === 'number' ? lastKnownLat : null,
+      lastKnownLng: typeof lastKnownLng === 'number' ? lastKnownLng : null,
+      routeRecognitionStatus: routeRecognitionStatus || 'Planned Route',
+      routeRefreshCount: typeof routeRefreshCount === 'number' ? routeRefreshCount : 0,
+      driverName,
+      plateNumber,
+      bookingType,
+      screenshotUrl,
+    };
+
+    if (existingTrip) {
+      // Update the active trip with final completed details
+      tripRecord = await prisma.trip.update({
+        where: { id: existingTrip.id },
+        data: tripDataPayload,
+      });
+    } else {
+      // Create new trip record
+      tripRecord = await prisma.trip.create({
+        data: {
+          ...tripDataPayload,
+          userId,
+          date: tripDate,
+        },
+      });
+    }
 
     // If this is a booking scanner upload (has screenshot or booking details), mark user as Online/Active.
     // If this is a completed commute trip, mark as Offline.
@@ -88,7 +119,7 @@ export async function POST(request: NextRequest) {
       },
     }).catch(() => {});
 
-    return NextResponse.json(newTrip, { status: 201 });
+    return NextResponse.json(tripRecord, { status: 201 });
   } catch (error) {
     console.error('Trip SAVE Error:', error);
     return NextResponse.json({ error: 'Failed to save trip' }, { status: 500 });

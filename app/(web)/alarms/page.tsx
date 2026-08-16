@@ -48,15 +48,15 @@ export default function AlarmsPage() {
   }, []);
 
   const activeAlarmCount = alarms.filter(
-    (alarm) => alarm.status === "Pending"
+    (alarm) => alarm.status === "Pending" || alarm.status === "Triggered"
   ).length;
 
   const filteredAlarms = useMemo(() => {
     let result = [...alarms];
 
-    // Tab filter: active = only Pending
+    // Tab filter: active = Pending or Triggered
     if (activeTab === "active") {
-      result = result.filter((alarm) => alarm.status === "Pending");
+      result = result.filter((alarm) => alarm.status === "Pending" || alarm.status === "Triggered");
     }
 
     // Status filter
@@ -92,10 +92,9 @@ export default function AlarmsPage() {
       <Sidebar />
 
       <main className="flex-1 p-8 overflow-auto">
-        <header className="flex items-start justify-between mb-8">
+        <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Alarms Management</h1>
-            <p className="text-slate-400">Monitor and resolve triggered security alarms across the facility</p>
+            <h1 className="text-3xl font-bold text-white">Alarms Management</h1>
           </div>
           <ExportButton data={filteredAlarms} filename="alerto_alarms_export.csv" label="Export Data" />
         </header>
@@ -109,7 +108,13 @@ export default function AlarmsPage() {
               }`}
           >
             Active Alarms
-            <span className="bg-slate-700 text-white text-[10px] px-2 py-0.5 rounded-full">{activeAlarmCount}</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+              activeTab === "active" 
+                ? "bg-blue-500 text-white" 
+                : "bg-slate-700/60 text-slate-300"
+            }`}>
+              {activeAlarmCount}
+            </span>
           </button>
           <button
             onClick={() => setActiveTab("history")}

@@ -1,35 +1,57 @@
-import { Metadata } from "next";
-import { getDashboardData } from "@/hooks/useDashboardData";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { UserTable } from "@/components/dashboard/user-table";
 import { ExportButton } from "@/components/dashboard/export-button";
+import type { DashboardData } from "@/hooks/useDashboardData";
 
-export const metadata: Metadata = {
-  title: "Alerto | Dashboard",
-};
+export default function DashboardPage() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
 
-export default async function DashboardPage() {
-  const dashboardData = await getDashboardData();
+  useEffect(() => {
+    document.title = "Alerto | Dashboard";
+    
+    let isMounted = true;
+    
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/admin/dashboard");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setDashboardData(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+      }
+    }
+
+    // Initial fetch
+    fetchData();
+
+    // Poll every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const { stats, users } = dashboardData ?? {};
 
   const allUsers = Array.isArray(users) ? users : [];
-
-  const overallUsers = allUsers.length;
-  const perPage = 10;
-  const currentPage = 1; 
-  const pageCount = Math.max(1, Math.ceil(overallUsers / perPage));
-  
-  const itemsToShow = allUsers.slice(0, perPage);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#151a23]">
       <Sidebar />
       <main className="flex-1 p-8 overflow-auto">
-        <header className="flex items-start justify-between mb-8">
+        <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
-            <p className="text-slate-400">Real-time transit system health and monitoring</p>
+            <h1 className="text-3xl font-bold text-white">Dashboard Overview</h1>
           </div>
           <ExportButton stats={stats} users={users} filename="alertodashboardreport.csv" label="Export Data" />
         </header>
@@ -42,11 +64,7 @@ export default async function DashboardPage() {
         </div>
 
         <UserTable 
-          users={itemsToShow} 
-          currentPage={currentPage} 
-          pageCount={pageCount} 
-          currentPageItems={itemsToShow.length} 
-          overallUsers={overallUsers} 
+          users={allUsers} 
         />
 
       </main>

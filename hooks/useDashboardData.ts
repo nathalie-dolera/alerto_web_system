@@ -59,22 +59,22 @@ export async function getDashboardData(): Promise<DashboardData> {
     const recentAlertUserIds = new Set(recentAlerts.map(a => a.userId).filter(Boolean) as string[]);
 
     const usersWithRealtimeStatus = allUsersFromDb.map((user) => {
-      // Live heartbeat: isOnline=true AND lastActive fresh within 5 mins
-      const hasLiveHeartbeat = Boolean(
-        user.isOnline &&
-        user.lastActive &&
-        (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
-      );
-      // Recent commute: a trip was saved within the last 10 minutes (commute just ended or is wrapping up)
-      const hasRecentTrip = recentTripUserIds.has(user.id);
-      // Safety alert in last 15 mins
-      const hasRecentAlert = recentAlertUserIds.has(user.id);
+      // If user is marked isOnline=false, they are immediately Offline/Inactive
+      if (!user.isOnline) {
+        return {
+          ...user,
+          isActuallyActive: false,
+        };
+      }
 
-      const isActuallyActive = hasLiveHeartbeat || hasRecentTrip || hasRecentAlert;
+      // If user is isOnline=true, verify lastActive is within 5 minutes
+      const isFresh = user.lastActive 
+        ? (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
+        : true;
 
       return {
         ...user,
-        isActuallyActive,
+        isActuallyActive: isFresh,
       };
     });
 

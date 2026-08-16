@@ -57,17 +57,41 @@ html.light .bg-\[\#0F172A\] {
 }
 
 /* Keep Sidebar Executive Dark Navy for Contrast */
-html.light aside.bg-\[\#1B2435\] {
+html.light aside.bg-\[\#1B2435\],
+html.light aside {
   background-color: #111827 !important;
   border-right-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-html.light aside .text-white {
+/* Force ALL text inside sidebar to stay readable on dark bg */
+html.light aside .text-white,
+html.light aside h1,
+html.light aside span,
+html.light aside a,
+html.light aside p,
+html.light aside div {
   color: #ffffff !important;
 }
 
-html.light aside .text-slate-400 {
+html.light aside .text-slate-400,
+html.light aside a.text-slate-400 {
   color: #94a3b8 !important;
+}
+
+html.light aside .text-slate-500 {
+  color: #64748b !important;
+}
+
+html.light aside .text-red-400 {
+  color: #f87171 !important;
+}
+
+html.light aside .bg-slate-400\/20 {
+  background-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+html.light aside .bg-\[\#0F172A\] {
+  background-color: #0F172A !important;
 }
 
 /* Table Headers with Soft Blue-Slate Tint */
@@ -83,17 +107,21 @@ html.light th {
 
 /* Line Tabs & Active Blue Accent Styling */
 html.light .border-blue-500 {
-  border-color: #2563eb !important;
+  border-color: #3b82f6 !important;
 }
 
 html.light .text-blue-500 {
-  color: #2563eb !important;
+  color: #3b82f6 !important;
   font-weight: 600 !important;
 }
 
 html.light .border-b-2.border-blue-500 {
-  border-bottom-color: #2563eb !important;
+  border-bottom-color: #3b82f6 !important;
   border-bottom-width: 2.5px !important;
+}
+
+html.light .bg-blue-500 {
+  background-color: #3b82f6 !important;
 }
 
 /* Tab Navigation container lines */
@@ -102,14 +130,13 @@ html.light .border-b.border-slate-700\/30 {
   border-bottom-color: #cbd5e1 !important;
 }
 
-/* Text Colors in Light Mode Content */
+/* Text Colors in Light Mode Content — scoped to main to avoid sidebar */
 html.light main .text-white,
-html.light div:not(aside) > .text-white,
-html.light table .text-white,
-html.light h1.text-white,
-html.light h2.text-white,
-html.light h3.text-white,
-html.light h4.text-white {
+html.light main h1.text-white,
+html.light main h2.text-white,
+html.light main h3.text-white,
+html.light main h4.text-white,
+html.light table .text-white {
   color: #0f172a !important;
 }
 
@@ -120,7 +147,7 @@ html.light td .text-slate-300 {
 
 html.light main .text-slate-400,
 html.light td .text-slate-400,
-html.light p.text-slate-400 {
+html.light main p.text-slate-400 {
   color: #64748b !important;
 }
 

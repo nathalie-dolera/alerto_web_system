@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateReportAnalysis, parseReportTab } from '@/lib/report-analysis';
+import { generateReportAnalysis, parseReportTab, parseTimeRange } from '@/lib/report-analysis';
 
 export async function GET(request: NextRequest) {
   try {
     const tab = parseReportTab(request.nextUrl.searchParams.get('tab'));
-    const { analysis, snapshot } = await generateReportAnalysis(tab);
+    const range = parseTimeRange(request.nextUrl.searchParams.get('range') || '30d');
+    const { analysis, snapshot } = await generateReportAnalysis(tab, range);
 
     return NextResponse.json({ analysis, snapshot });
   } catch (error) {

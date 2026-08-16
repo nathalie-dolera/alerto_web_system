@@ -14,10 +14,14 @@ const TRIGGER_LABELS: Record<string, string> = {
   IDLE_TIME: 'Idle Time Exceeded',
   OFF_ROUTE: 'Route Deviation',
   MOVEMENT_LOSS: 'Movement Signal Lost',
+  congestion: 'Congestion Zone Alert',
+  hazard: 'Road Hazard Alert',
+  flood: 'Flood Risk Alert',
+  accident: 'Traffic Incident Alert',
 };
 
 function formatTrigger(raw: string): string {
-  return TRIGGER_LABELS[raw] || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return TRIGGER_LABELS[raw] || TRIGGER_LABELS[raw.toLowerCase()] || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export async function GET() {
@@ -26,6 +30,7 @@ export async function GET() {
       where: {
         OR: [
           { anomalyCount: { gt: 0 } },
+          { alertsTriggeredCount: { gt: 0 } },
           { safetyStatus: 'Suspicious' },
           { safetyStatus: 'SOS-Triggered' },
         ],
@@ -59,13 +64,21 @@ export async function GET() {
         status = 'Resolved';
       }
 
+      let rawTriggers = (trip.anomalyTriggers && trip.anomalyTriggers.length > 0)
+        ? trip.anomalyTriggers
+        : (trip.unsafeZonesEncountered && trip.unsafeZonesEncountered.length > 0)
+        ? trip.unsafeZonesEncountered
+        : trip.alertsTriggeredCount > 0
+        ? ['Commute Alert']
+        : [];
+
       return {
         id: `AL-2026${index + 1}`,
         tripId: trip.id,
         initials: initialsFromName(userName),
         name: userName,
         location: trip.destinationName,
-        triggers: (trip.anomalyTriggers || []).map(formatTrigger),
+        triggers: rawTriggers.map(formatTrigger),
         rawTime: new Date(timeSource).toISOString(),
         time: new Date(timeSource).toLocaleString('en-PH', {
           dateStyle: 'medium',

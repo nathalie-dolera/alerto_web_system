@@ -118,10 +118,9 @@ export default function UsersPage() {
       <Sidebar />
 
       <main className="flex-1 p-8 overflow-auto">
-        <header className="flex items-start justify-between mb-8">
+        <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
-            <p className="text-slate-400">Manage and monitor system access for all registered users.</p>
+            <h1 className="text-3xl font-bold text-white">User Management</h1>
           </div>
           <div className="flex items-center gap-3">
             {currentUserRole === 'super-admin' && (
@@ -149,7 +148,11 @@ export default function UsersPage() {
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`transition-colors font-medium pb-2 -mb-[9px] ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-slate-400 hover:text-white'}`}
+                className={`transition-colors font-medium pb-2 -mb-[9px] ${
+                  activeTab === tab 
+                    ? "text-blue-500 border-b-2 border-blue-500" 
+                    : "text-slate-400 hover:text-white"
+                }`}
               >
                 {tab}
               </button>

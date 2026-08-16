@@ -12,14 +12,19 @@ type ReportAnalysis = {
   analyzedAt: string;
 };
 
+type TimeRange = "today" | "7d" | "30d";
+
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState("System Overview");
-  const [selectedAnomaly, setSelectedAnomaly] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [analysisByTab, setAnalysisByTab] = useState<Record<string, ReportAnalysis>>({});
   const [snapshotByTab, setSnapshotByTab] = useState<Record<string, any>>({});
   const [analysisStatus, setAnalysisStatus] = useState<"idle" | "loading" | "error">("idle");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [dataPointsPage, setDataPointsPage] = useState(1);
+  const [devicesPage, setDevicesPage] = useState(1);
+  const itemsPerPage = 10;
 
   async function handleDeleteDevice(userId: string) {
     setDeleteLoading(true);
@@ -31,12 +36,13 @@ export default function ReportsPage() {
       });
       if (res.ok) {
         setSnapshotByTab(prev => {
-          const current = prev["Device Metrics"];
+          const cacheKey = `${activeTab}-${timeRange}`;
+          const current = prev[cacheKey];
           if (!current) return prev;
           const updatedDevices = (current.devicesList || []).filter((d: any) => d.id !== userId);
           return {
             ...prev,
-            ["Device Metrics"]: {
+            [cacheKey]: {
               ...current,
               devicesList: updatedDevices,
               totalDevices: Math.max(0, (current.totalDevices || 1) - 1),
@@ -56,6 +62,11 @@ export default function ReportsPage() {
     document.title = "Alerto | Reports";
   }, []);
 
+  const cacheKey = `${activeTab}-${timeRange}`;
+  const currentSnapshot = snapshotByTab[cacheKey] || {};
+  const currentAiInsight = analysisByTab[cacheKey];
+  const currentAnalysisMeta = analysisByTab[cacheKey];
+
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
@@ -65,10 +76,13 @@ export default function ReportsPage() {
       setAnalysisStatus("loading");
 
       try {
-        const response = await fetch(`/api/admin/reports/analysis?tab=${encodeURIComponent(activeTab)}`, {
-          cache: "no-store",
-          signal,
-        });
+        const response = await fetch(
+          `/api/admin/reports/analysis?tab=${encodeURIComponent(activeTab)}&range=${timeRange}`,
+          {
+            cache: "no-store",
+            signal,
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to load report analysis");
@@ -78,19 +92,18 @@ export default function ReportsPage() {
         if (!cancelled && data.analysis) {
           setAnalysisByTab((current) => ({
             ...current,
-            [activeTab]: data.analysis,
+            [cacheKey]: data.analysis,
           }));
           if (data.snapshot) {
             setSnapshotByTab((current) => ({
               ...current,
-              [activeTab]: data.snapshot,
+              [cacheKey]: data.snapshot,
             }));
           }
           setAnalysisStatus("idle");
         }
       } catch (error: any) {
         if (error.name === 'AbortError') {
-          console.log('Fetch aborted');
           return;
         }
         console.error("Failed to load AI report analysis", error);
@@ -104,7 +117,7 @@ export default function ReportsPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [activeTab]);
+  }, [activeTab, timeRange, cacheKey]);
 
   const getTableData = () => {
     const trips = currentSnapshot.recentTrips || [];
@@ -112,9 +125,19 @@ export default function ReportsPage() {
       const tripDate = trip.date ? new Date(trip.date) : new Date();
       const tripYear = isNaN(tripDate.getTime()) ? 2026 : tripDate.getFullYear();
       const count = index + 1;
+      const responseTimes: number[] = Array.isArray(trip.responseTimes) ? trip.responseTimes : [];
+      let avgResponse = "—";
+      if (responseTimes.length > 0) {
+        const rawAvg = responseTimes.reduce((a: number, b: number) => a + b, 0) / responseTimes.length;
+        // If logged in ms (>100), convert to seconds; otherwise keep as seconds
+        const inSeconds = rawAvg > 100 ? Math.round(rawAvg / 1000) : Math.round(rawAvg);
+        avgResponse = `${inSeconds}s`;
+      }
+
       return {
         id: `TRP-${tripYear}${count}`,
         description: `Trip to ${trip.destinationName || 'Unknown'} (${trip.durationMinutes} mins) - ${trip.anomalyCount} anomalies.`,
+        avgResponse,
         date: new Date(trip.date).toLocaleString(),
         status: trip.safetyStatus === 'Suspicious' ? 'Caution' : trip.safetyStatus === 'SOS-Triggered' ? 'Emergency' : trip.anomalyCount > 0 ? 'Notice' : 'Normal',
       };
@@ -141,26 +164,47 @@ export default function ReportsPage() {
   };
 
   const tabs = ["System Overview", "User Activity", "Alarm History", "Device Metrics"];
-  const currentSnapshot = snapshotByTab[activeTab] || {};
-  const currentAiInsight = analysisByTab[activeTab];
-  const currentAnalysisMeta = analysisByTab[activeTab];
+  const rangeOptions: { label: string; value: TimeRange }[] = [
+    { label: "Today (24h)", value: "today" },
+    { label: "Last 7 Days", value: "7d" },
+    { label: "Last 30 Days", value: "30d" },
+  ];
 
-  // Reset selected anomaly when tab changes
-  useEffect(() => {
-    setSelectedAnomaly(null);
-  }, [activeTab]);
+  const rangeLabel = timeRange === "today" ? "Today" : timeRange === "7d" ? "Last 7 Days" : "Last 30 Days";
 
   return (
     <div className="min-h-screen bg-[#111827] flex font-sans">
       <Sidebar />
 
       <main className="flex-1 p-8 overflow-auto">
-        <header className="flex items-start justify-between mb-8">
+        <header className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Reports & Analytics</h1>
-            <p className="text-slate-400">View comprehensive system reports and historical data</p>
+            <h1 className="text-3xl font-bold text-white">Reports & Analytics</h1>
           </div>
-          <ExportButton stats={{}} users={[]} filename={`alerto_${activeTab.toLowerCase().replace(/ /g, '_')}_report.csv`} label="Export Report" />
+          <div className="flex items-center gap-3">
+            {/* Time Range Selector */}
+            <div className="flex items-center bg-[#1B2435] border border-slate-700/50 rounded-lg p-1">
+              {rangeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setTimeRange(opt.value)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    timeRange === opt.value
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <ExportButton
+              stats={{}}
+              users={[]}
+              filename={`alerto_${activeTab.toLowerCase().replace(/ /g, '_')}_${timeRange}_report.csv`}
+              label="Export Report"
+            />
+          </div>
         </header>
 
         {/* Tab Navigation */}
@@ -180,20 +224,22 @@ export default function ReportsPage() {
           ))}
         </div>
 
-        {/* AI Insight Card for standard tabs */}
-        {currentAiInsight && activeTab !== "Device Metrics" && (
-          <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-[#1B2435] border border-indigo-500/30 rounded-xl p-6 mb-6 relative overflow-hidden group">
-            <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-all duration-700"></div>
+        {/* AI Insight Card for standard tabs (Theme matches solid StatCard style) */}
+        {activeTab !== "Device Metrics" && activeTab !== "User Activity" && (
+          <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 mb-6 relative overflow-hidden">
             <div className="flex items-start gap-4 relative z-10">
-               <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-1 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+               <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                </div>
                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-white mb-2 flex items-center flex-wrap gap-2">
                      Alerto AI Data Compilation
-                     <span className="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 tracking-wider">AUTO-GENERATED</span>
+                     <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/20 tracking-wider">AUTO-GENERATED</span>
+                     <span className="text-[10px] font-semibold bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600/40 tracking-wider uppercase">
+                       {rangeLabel}
+                     </span>
                      {currentAnalysisMeta && (
-                       <span className="text-[10px] font-semibold bg-slate-700/60 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600 tracking-wider">
+                       <span className="text-[10px] font-semibold bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600/40 tracking-wider">
                          {currentAnalysisMeta.generatedBy === "gemini" ? "GEMINI" : "LOCAL FALLBACK"}
                        </span>
                      )}
@@ -202,15 +248,15 @@ export default function ReportsPage() {
                      )}
                   </h3>
                   <p className="text-slate-300 text-sm mb-4 leading-relaxed max-w-4xl">
-                    {currentAiInsight.compilation}
+                    {currentAiInsight?.compilation || `Overview metrics for ${rangeLabel} are currently compiled across ${currentSnapshot.tripsCount ?? 0} monitored trips.`}
                   </p>
-                  <div className="bg-[#0F172A]/60 border border-indigo-500/20 rounded-lg p-4 shadow-inner max-w-4xl">
-                     <h4 className="text-xs font-semibold text-indigo-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="bg-[#151a23] border border-slate-700/40 rounded-lg p-4 max-w-4xl">
+                     <h4 className="text-xs font-semibold text-blue-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                        AI Recommendation
                      </h4>
                      <p className="text-sm text-slate-300">
-                       {currentAiInsight.recommendation}
+                       {currentAiInsight?.recommendation || 'Maintain real-time GPS telemetry and commuter safety monitoring to identify potential transit route bottlenecks.'}
                      </p>
                   </div>
                   {analysisStatus === "error" && (
@@ -229,28 +275,73 @@ export default function ReportsPage() {
             case "System Overview":
               return (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center">
+                   <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 flex flex-col justify-center">
+                       <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4">
+                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                       </div>
                        <h4 className="text-slate-400 text-sm font-medium mb-1">Total Devices Registered</h4>
                        <span className="text-3xl font-bold text-white mb-4">{currentSnapshot.totalDevices ?? 0}</span>
                        <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden">
-                         <div className="bg-blue-500 w-3/4 h-full" style={{ width: `${Math.min(100, ((currentSnapshot.connectedDevicesCount ?? 0) / Math.max(1, currentSnapshot.totalDevices ?? 1)) * 100)}%` }}></div>
+                         <div className="bg-blue-500 h-full" style={{ width: `${Math.min(100, ((currentSnapshot.connectedDevicesCount ?? 0) / Math.max(1, currentSnapshot.totalDevices ?? 1)) * 100)}%` }}></div>
                        </div>
-                       <span className="text-xs text-slate-500 mt-2">{currentSnapshot.connectedDevicesCount ?? 0} currently connected</span>
+                       <span className="text-xs text-slate-400 mt-2">{currentSnapshot.connectedDevicesCount ?? 0} currently connected</span>
                    </div>
-                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center">
-                       <h4 className="text-slate-400 text-sm font-medium mb-1">Trips Monitored (30 Days)</h4>
-                       <span className="text-3xl font-bold text-white mb-4">{currentSnapshot.tripsLast30Days ?? 0}</span>
+                   <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 flex flex-col justify-center">
+                       <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4">
+                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18"/><path d="m15 6 6 6-6 6"/><path d="M3 6h4"/><path d="M3 18h4"/></svg>
+                       </div>
+                       <h4 className="text-slate-400 text-sm font-medium mb-1">Trips Monitored ({rangeLabel})</h4>
+                       <span className="text-3xl font-bold text-white mb-4">{currentSnapshot.tripsCount ?? 0}</span>
                    </div>
-                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center">
-                       <h4 className="text-slate-400 text-sm font-medium mb-1">Alerts Processed (30 Days)</h4>
-                       <span className="text-3xl font-bold text-white mb-4">{currentSnapshot.alertsLast30Days ?? 0}</span>
+                   <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 flex flex-col justify-center">
+                       <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4">
+                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                       </div>
+                       <h4 className="text-slate-400 text-sm font-medium mb-1">Anomalies Detected ({rangeLabel})</h4>
+                       <span className="text-3xl font-bold text-white mb-4">{currentSnapshot.anomalyTripsCount ?? 0}</span>
                    </div>
                 </div>
               );
             case "User Activity":
               return (
-                <div className="grid grid-cols-1 gap-6 mb-6">
-                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 min-h-[300px]">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                   <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 relative flex flex-col justify-between">
+                     <div className="flex items-start gap-4 relative z-10">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                           <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                        </div>
+                        <div className="flex-1">
+                           <h3 className="text-lg font-semibold text-white mb-2 flex items-center flex-wrap gap-2">
+                              Alerto AI Data Compilation
+                              <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/20 tracking-wider">AUTO-GENERATED</span>
+                              <span className="text-[10px] font-semibold bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600/40 tracking-wider uppercase">
+                                {rangeLabel}
+                              </span>
+                              {currentAnalysisMeta && (
+                                <span className="text-[10px] font-semibold bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600/40 tracking-wider">
+                                  {currentAnalysisMeta.generatedBy === "gemini" ? "GEMINI" : "LOCAL FALLBACK"}
+                                </span>
+                              )}
+                              {analysisStatus === "loading" && (
+                                <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30 tracking-wider">REFRESHING</span>
+                              )}
+                           </h3>
+                           <p className="text-slate-300 text-sm mb-4 leading-relaxed">
+                             {currentAiInsight?.compilation || `User activity metrics for ${rangeLabel} show ${currentSnapshot.registeredUsersCount ?? 0} registered users with ${currentSnapshot.activeUsersCount ?? 0} actively commuting.`}
+                           </p>
+                           <div className="bg-[#151a23] border border-slate-700/40 rounded-lg p-4">
+                              <h4 className="text-xs font-semibold text-blue-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                AI Recommendation
+                              </h4>
+                              <p className="text-sm text-slate-300">
+                                {currentAiInsight?.recommendation || 'Encourage commuters to enable Bluetooth and background location services during trips for optimal safety tracking.'}
+                              </p>
+                           </div>
+                        </div>
+                     </div>
+                   </div>
+                   <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 min-h-[300px] flex flex-col">
                       <h3 className="text-lg font-semibold text-white mb-6">User Base Overview</h3>
                       <div className="grid grid-cols-2 gap-8 mb-8">
                         <div>
@@ -258,14 +349,24 @@ export default function ReportsPage() {
                           <span className="text-4xl font-bold text-white">{currentSnapshot.registeredUsersCount ?? 0}</span>
                         </div>
                         <div>
-                          <h4 className="text-slate-400 text-sm mb-2">Live / Active Right Now</h4>
-                          <span className="text-4xl font-bold text-indigo-400">{currentSnapshot.activeUsersCount ?? 0}</span>
+                          <h4 className="text-slate-400 text-sm mb-2">Total Monitored Hours</h4>
+                          <span className="text-4xl font-bold text-blue-400">
+                            {currentSnapshot.totalMonitoredHours != null 
+                              ? (Math.round(currentSnapshot.totalMonitoredHours * 10) / 10).toFixed(1)
+                              : "0.0"}
+                            <span className="text-base font-normal text-slate-400 ml-1">hrs</span>
+                          </span>
                         </div>
                       </div>
-                      <div className="w-full bg-slate-700/50 h-4 rounded-full overflow-hidden mt-auto">
-                         <div className="bg-indigo-500 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, ((currentSnapshot.activeUsersCount ?? 0) / Math.max(1, currentSnapshot.registeredUsersCount ?? 1)) * 100)}%` }}></div>
+                      <div className="w-full bg-slate-700/50 h-3 rounded-full overflow-hidden mt-auto mb-4">
+                         <div 
+                           className="bg-blue-500 h-full rounded-full transition-all duration-1000" 
+                           style={{ width: `${Math.min(100, (((currentSnapshot.activeCommutersCount ?? 0) / Math.max(1, currentSnapshot.registeredUsersCount ?? 1)) * 100))}%` }}
+                         ></div>
                       </div>
-                      <p className="text-slate-400 text-sm mt-4 text-center">Percentage of registered users currently commuting</p>
+                      <p className="text-slate-400 text-sm text-center">
+                        {currentSnapshot.activeCommutersCount ?? 0} active commuters ({Math.round(((currentSnapshot.activeCommutersCount ?? 0) / Math.max(1, currentSnapshot.registeredUsersCount ?? 1)) * 100)}% of user base active in this period)
+                      </p>
                    </div>
                 </div>
               );
@@ -273,54 +374,61 @@ export default function ReportsPage() {
               const triggers = currentSnapshot.topAnomalyTriggers || [];
               const topTrigger1 = triggers[0] || { trigger: 'Drowsiness', count: 0 };
               const topTrigger2 = triggers[1] || { trigger: 'Snoring', count: 0 };
-              const topTrigger3 = triggers[2] || { trigger: 'Theft/SOS', count: 0 };
+              const topTrigger3 = triggers[2] || { trigger: 'Anti-Theft', count: 0 };
               const topTrigger4 = triggers[3] || { trigger: 'Route Dev.', count: 0 };
               
               return (
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col items-center justify-center">
-                     <h4 className="text-slate-400 text-sm font-medium mb-6 text-center">Commute Anomalies (30 Days)</h4>
-                     <div className="relative w-40 h-40 rounded-full border-[20px] border-slate-700/30 border-t-red-500 border-r-purple-500 border-b-indigo-500 border-l-yellow-500 flex items-center justify-center shadow-inner">
+                  <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-5 flex flex-col items-center justify-center">
+                     <h4 className="text-slate-400 text-sm font-medium mb-4 text-center">Commute Anomalies ({rangeLabel})</h4>
+                     <div className="relative w-32 h-32 rounded-full border-[16px] border-slate-700/30 border-t-red-500 border-r-purple-500 border-b-blue-500 border-l-yellow-500 flex items-center justify-center shadow-inner">
                         <div className="flex flex-col items-center">
-                          <span className="text-3xl font-bold text-white">{currentSnapshot.anomalyTripsCount ?? 0}</span>
-                          <span className="text-xs text-slate-500">Total Incidents</span>
+                          <span className="text-2xl font-bold text-white">{currentSnapshot.anomalyTripsCount ?? 0}</span>
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wider">Incidents</span>
                         </div>
                      </div>
-                     <div className="grid grid-cols-2 gap-4 w-full mt-8 text-sm">
-                        <div className="flex flex-col items-center gap-1"><div className="w-3 h-3 rounded-full bg-purple-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger1.trigger}</span><span className="font-bold text-white">{topTrigger1.count}</span></div>
-                        <div className="flex flex-col items-center gap-1"><div className="w-3 h-3 rounded-full bg-indigo-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger2.trigger}</span><span className="font-bold text-white">{topTrigger2.count}</span></div>
-                        <div className="flex flex-col items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger3.trigger}</span><span className="font-bold text-white">{topTrigger3.count}</span></div>
-                        <div className="flex flex-col items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger4.trigger}</span><span className="font-bold text-white">{topTrigger4.count}</span></div>
+                     <div className="grid grid-cols-2 gap-3 w-full mt-4 text-sm">
+                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-purple-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger1.trigger}</span><span className="font-bold text-white text-xs">{topTrigger1.count}</span></div>
+                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger2.trigger}</span><span className="font-bold text-white text-xs">{topTrigger2.count}</span></div>
+                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger3.trigger}</span><span className="font-bold text-white text-xs">{topTrigger3.count}</span></div>
+                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger4.trigger}</span><span className="font-bold text-white text-xs">{topTrigger4.count}</span></div>
                      </div>
                   </div>
-                  <div className="xl:col-span-2 bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col relative transition-all duration-300">
-                      <h3 className="text-lg font-semibold text-white mb-2">Average Response Time</h3>
-                      <p className="text-slate-400 text-sm mb-6">Time taken to acknowledge and resolve commute alerts across the system.</p>
-                      <div className="flex items-center justify-center h-48 mt-auto pb-4">
+                  <div className="xl:col-span-2 bg-[#242F41] border border-slate-700/40 rounded-xl p-5 flex flex-col justify-between relative transition-all duration-300">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-1">Average Response Time</h3>
+                        <p className="text-slate-400 text-xs mb-3">Time taken to acknowledge and resolve commute alerts and anti-theft alarms across the system ({rangeLabel}).</p>
+                      </div>
+                      <div className="flex flex-col items-center justify-center py-4 my-auto">
                         <div className="text-center">
-                          <span className="text-6xl font-bold text-blue-400 block mb-4">{currentSnapshot.averageResponseTimeMs ? Math.round(currentSnapshot.averageResponseTimeMs / 1000) : 0}s</span>
-                          <span className="text-slate-300 text-lg">System-wide Average</span>
+                          <span className="text-5xl font-bold text-blue-400 block mb-1">{currentSnapshot.averageResponseTimeMs ? Math.round(currentSnapshot.averageResponseTimeMs / 1000) : 0}s</span>
+                          <span className="text-slate-300 text-sm">System-wide Average</span>
                         </div>
+                        {(!currentSnapshot.averageResponseTimeMs || currentSnapshot.averageResponseTimeMs === 0) && (
+                          <span className="text-xs text-slate-500 mt-2 italic">No response time data logged by mobile app for this period.</span>
+                        )}
                       </div>
                   </div>
                 </div>
               );
             case "Device Metrics":
-              return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                   {/* Alerto AI Data Compilation */}
-                   <div className="lg:col-span-2 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-[#1B2435] border border-indigo-500/30 rounded-xl p-6 relative overflow-hidden group flex flex-col justify-between shadow-[0_0_10px_rgba(99,102,241,0.05)]">
-                      <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-all duration-700"></div>
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                     {/* Alerto AI Data Compilation (Solid Card theme matching second image) */}
+                     <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 relative flex flex-col justify-between">
                       <div className="flex items-start gap-4 relative z-10">
-                         <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-1 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                         <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                          </div>
                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-white mb-2 flex items-center flex-wrap gap-2">
+                            <h3 className="text-lg font-semibold text-white mb-2 flex items-center flex-wrap gap-2">
                                Alerto AI Data Compilation
-                               <span className="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 tracking-wider">AUTO-GENERATED</span>
+                               <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/20 tracking-wider">AUTO-GENERATED</span>
+                               <span className="text-[10px] font-semibold bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600/40 tracking-wider uppercase">
+                                 {rangeLabel}
+                               </span>
                                {currentAnalysisMeta && (
-                                 <span className="text-[10px] font-semibold bg-slate-700/60 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600 tracking-wider">
+                                 <span className="text-[10px] font-semibold bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600/40 tracking-wider">
                                    {currentAnalysisMeta.generatedBy === "gemini" ? "GEMINI" : "LOCAL FALLBACK"}
                                  </span>
                                )}
@@ -329,10 +437,10 @@ export default function ReportsPage() {
                                )}
                             </h3>
                             <p className="text-slate-300 text-sm mb-4 leading-relaxed">
-                              {currentAiInsight?.compilation || 'Recent device metrics are being analyzed for connection stability and hardware activity.'}
+                              {currentAiInsight?.compilation || `Device metrics for ${rangeLabel} are being analyzed for connection stability and hardware activity.`}
                             </p>
-                            <div className="bg-[#0F172A]/60 border border-indigo-500/20 rounded-lg p-4 shadow-inner">
-                               <h4 className="text-xs font-semibold text-indigo-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                            <div className="bg-[#151a23] border border-slate-700/40 rounded-lg p-4">
+                               <h4 className="text-xs font-semibold text-blue-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
                                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                                  AI Recommendation
                                </h4>
@@ -349,25 +457,22 @@ export default function ReportsPage() {
                       </div>
                    </div>
 
-                   {/* Total Connected Devices */}
-                   <div className="bg-[#1B2435] border border-slate-700/50 rounded-xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-blue-500/50 transition-colors shadow-[0_0_10px_rgba(59,130,246,0.05)]">
-                       <div className="absolute -right-4 -top-4 w-28 h-28 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-colors"></div>
+                   {/* Total Connected Devices (Solid Card theme matching second image) */}
+                   <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 flex flex-col justify-between relative">
                        <div>
-                         <div className="flex items-center justify-between mb-4 relative z-10">
-                            <h4 className="text-slate-400 text-sm font-medium">Total Connected Devices</h4>
-                            <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
-                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                         <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
                             </div>
                          </div>
-                         <div className="relative z-10">
-                           <span className="text-5xl font-bold text-white tracking-tight">{currentSnapshot.connectedDevicesCount ?? 0}</span>
-                         </div>
+                         <h4 className="text-slate-400 text-sm font-medium mb-1">Total Connected Devices</h4>
+                         <span className="text-5xl font-bold text-white tracking-tight">{currentSnapshot.connectedDevicesCount ?? 0}</span>
                        </div>
-                       <div className="pt-6 relative z-10 border-t border-slate-700/40 mt-6">
+                       <div className="pt-6 border-t border-slate-700/40 mt-6">
                          <div className="flex items-center justify-between text-xs mb-2">
-                           <span className="text-slate-400">Connection Rate</span>
+                           <span className="text-slate-400">Connection Sessions</span>
                            <span className="text-blue-400 font-semibold">
-                             {Math.round(((currentSnapshot.connectedDevicesCount ?? 0) / Math.max(1, currentSnapshot.totalDevices ?? 1)) * 100)}%
+                             {timeRange === 'today' ? currentSnapshot.deviceSessionsCountToday : timeRange === '7d' ? currentSnapshot.deviceSessionsCount7d : currentSnapshot.deviceSessionsCount30d} sessions
                            </span>
                          </div>
                          <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden mb-2">
@@ -376,7 +481,7 @@ export default function ReportsPage() {
                              style={{ width: `${Math.min(100, ((currentSnapshot.connectedDevicesCount ?? 0) / Math.max(1, currentSnapshot.totalDevices ?? 1)) * 100)}%` }}
                            ></div>
                          </div>
-                         <span className="text-xs text-slate-400">Out of {currentSnapshot.totalDevices ?? 0} registered devices</span>
+                         <span className="text-xs text-slate-400">{currentSnapshot.connectedDevicesCount ?? 0} active in this period out of {currentSnapshot.totalDevices ?? 0} registered devices</span>
                        </div>
                    </div>
                 </div>
@@ -386,9 +491,9 @@ export default function ReportsPage() {
           }
         })()}
 
-        {/* Source Data Activity Table */}
+        {/* Table Area */}
         {activeTab === "Device Metrics" ? (
-          <div className="bg-[#242F41] rounded-xl border border-slate-700/30 overflow-hidden flex flex-col mt-6 shadow-[0_0_10px_rgba(59,130,246,0.03)]">
+          <div className="bg-[#242F41] rounded-xl border border-slate-700/40 overflow-hidden flex flex-col mt-6">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="text-xs font-semibold text-slate-400 bg-[#1B2435]/50 border-b border-slate-700/30">
@@ -396,6 +501,7 @@ export default function ReportsPage() {
                     <th className="px-6 py-4">ACCOUNT</th>
                     <th className="px-6 py-4">DEVICE ID</th>
                     <th className="px-6 py-4">CONNECTION</th>
+                    <th className="px-6 py-4">SESSIONS</th>
                     <th className="px-6 py-4 text-center">MANAGE</th>
                   </tr>
                 </thead>
@@ -407,7 +513,9 @@ export default function ReportsPage() {
                       </td>
                     </tr>
                   ) : (
-                    (currentSnapshot.devicesList || []).map((dev: any) => (
+                    (currentSnapshot.devicesList || [])
+                      .slice((devicesPage - 1) * itemsPerPage, devicesPage * itemsPerPage)
+                      .map((dev: any) => (
                       <tr key={dev.id} className="hover:bg-slate-700/10 transition-colors">
                         <td className="px-6 py-5 text-white font-medium">{dev.account || '—'}</td>
                         <td className="px-6 py-5 text-white font-medium">{dev.deviceId || '—'}</td>
@@ -417,6 +525,7 @@ export default function ReportsPage() {
                             <span className={dev.status === 'Connected' ? 'text-emerald-400' : 'text-slate-400'}>{dev.status}</span>
                           </div>
                         </td>
+                        <td className="px-6 py-5 text-slate-300 font-medium">{dev.connectionCount || 0}</td>
                         <td className="px-6 py-5">
                           <div className="flex items-center justify-center">
                             <button
@@ -437,38 +546,51 @@ export default function ReportsPage() {
             </div>
             <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
               <span className="text-sm text-slate-400">
-                Showing {(currentSnapshot.devicesList || []).length > 0 ? 1 : 0} to {(currentSnapshot.devicesList || []).length} of {(currentSnapshot.devicesList || []).length} devices
+                Showing {(currentSnapshot.devicesList || []).length === 0 ? 0 : (devicesPage - 1) * itemsPerPage + 1} to {Math.min(devicesPage * itemsPerPage, (currentSnapshot.devicesList || []).length)} of {(currentSnapshot.devicesList || []).length} devices
               </span>
               <div className="flex gap-2">
-                <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg></button>
-                <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1B2435] border border-slate-700/50 text-slate-400 hover:text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg></button>
+                <button 
+                  onClick={() => setDevicesPage(p => Math.max(1, p - 1))}
+                  disabled={devicesPage === 1}
+                  className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${devicesPage === 1 ? 'bg-[#1B2435]/50 border-slate-700/30 text-slate-600 cursor-not-allowed' : 'bg-[#1B2435] border-slate-700/50 text-slate-400 hover:text-white'}`}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button 
+                  onClick={() => setDevicesPage(p => Math.min(Math.max(1, Math.ceil((currentSnapshot.devicesList || []).length / itemsPerPage)), p + 1))}
+                  disabled={devicesPage === Math.max(1, Math.ceil((currentSnapshot.devicesList || []).length / itemsPerPage))}
+                  className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${devicesPage === Math.max(1, Math.ceil((currentSnapshot.devicesList || []).length / itemsPerPage)) ? 'bg-[#1B2435]/50 border-slate-700/30 text-slate-600 cursor-not-allowed' : 'bg-[#1B2435] border-slate-700/50 text-slate-400 hover:text-white'}`}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
               </div>
             </div>
           </div>
         ) : (
-          <div className="bg-[#1B2435] border border-indigo-500/30 rounded-xl overflow-hidden mt-6 relative shadow-[0_0_10px_rgba(99,102,241,0.05)]">
-            <div className="px-6 py-5 border-b border-slate-700/50 flex justify-between items-center bg-indigo-500/5">
+          <div className="bg-[#242F41] border border-slate-700/40 rounded-xl overflow-hidden mt-6 flex flex-col">
+            <div className="px-6 py-5 border-b border-slate-700/30 flex justify-between items-center bg-[#1B2435]/50 shrink-0">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                 <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                 Data Points Analyzed by AI ({activeTab})
+                 <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                 Data Points Analyzed by AI ({activeTab} • {rangeLabel})
               </h3>
-              <button className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors font-medium">View Full Source Log</button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[#0F172A]/80 text-slate-400 border-b border-slate-700/50">
+              <table className="w-full text-left text-sm relative">
+                <thead className="bg-[#1B2435]/80 text-slate-400 border-b border-slate-700/30 sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     <th className="px-6 py-4 font-medium">Data Point ID</th>
                     <th className="px-6 py-4 font-medium">Source Event Description</th>
+                    <th className="px-6 py-4 font-medium">Avg. Response Time</th>
                     <th className="px-6 py-4 font-medium">Timestamp</th>
                     <th className="px-6 py-4 font-medium">Tag</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50 text-slate-300 bg-[#0F172A]/30">
-                  {getTableData().map((row: any, index: number) => (
+                <tbody className="divide-y divide-slate-700/30 text-slate-300">
+                  {getTableData().slice((dataPointsPage - 1) * itemsPerPage, dataPointsPage * itemsPerPage).map((row: any, index: number) => (
                     <tr key={index} className="hover:bg-slate-800/40 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-400">{row.id}</td>
                       <td className="px-6 py-4">{row.description}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-300">{row.avgResponse}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-500">{row.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getStatusColor(row.status)}`}>
@@ -479,6 +601,27 @@ export default function ReportsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="p-4 px-6 border-t border-slate-700/30 flex items-center justify-between bg-[#242F41]">
+              <span className="text-sm text-slate-400">
+                Showing {getTableData().length === 0 ? 0 : (dataPointsPage - 1) * itemsPerPage + 1} to {Math.min(dataPointsPage * itemsPerPage, getTableData().length)} of {getTableData().length} records
+              </span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setDataPointsPage(p => Math.max(1, p - 1))}
+                  disabled={dataPointsPage === 1}
+                  className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${dataPointsPage === 1 ? 'bg-[#1B2435]/50 border-slate-700/30 text-slate-600 cursor-not-allowed' : 'bg-[#1B2435] border-slate-700/50 text-slate-400 hover:text-white'}`}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button 
+                  onClick={() => setDataPointsPage(p => Math.min(Math.max(1, Math.ceil(getTableData().length / itemsPerPage)), p + 1))}
+                  disabled={dataPointsPage === Math.max(1, Math.ceil(getTableData().length / itemsPerPage))}
+                  className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${dataPointsPage === Math.max(1, Math.ceil(getTableData().length / itemsPerPage)) ? 'bg-[#1B2435]/50 border-slate-700/30 text-slate-600 cursor-not-allowed' : 'bg-[#1B2435] border-slate-700/50 text-slate-400 hover:text-white'}`}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         )}

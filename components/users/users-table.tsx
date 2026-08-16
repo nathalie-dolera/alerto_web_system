@@ -107,7 +107,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
                       <div className="relative group flex items-center justify-center">
                         <button 
                           onClick={() => onDelete(user.id)}
-                          className="h-[32px] w-[32px] flex items-center justify-center rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-all" 
+                          className="h-[32px] w-[32px] flex items-center justify-center rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all" 
                         >
                           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                         </button>
@@ -124,7 +124,7 @@ export function UsersTable({ users, totalUsers, onToggleStatus, onDelete, loadin
                                 onUpdatePassword(user);
                               }
                             }}
-                            className="h-[32px] w-[32px] flex items-center justify-center rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-all" 
+                            className="h-[32px] w-[32px] flex items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all" 
                           >
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/>

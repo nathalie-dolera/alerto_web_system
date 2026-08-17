@@ -57,10 +57,10 @@ export default function DashboardPage() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <StatCard title="Active Users" value={stats?.activeUsers ?? 0} type="users" href="/users?tab=Active" />
-          <StatCard title="Mobile Users" value={stats?.registeredUsers ?? 0} type="registeredUsers" href="/users?tab=All%20Users" />
-          <StatCard title="Connected Devices" value={stats?.connectedDevices ?? 0} type="devices" href="/devices" />
-          <StatCard title="Alarms Triggered" value={stats?.alarmsTriggered ?? 0} type="alarms" href="/alarms" />
+          <StatCard title="Active Users" value={stats?.activeUsers ?? "0"} type="users" href="/users?tab=Active" />
+          <StatCard title="Mobile Users" value={stats?.registeredUsers ?? "0"} type="registeredUsers" href="/users?tab=All%20Users" />
+          <StatCard title="Connected Devices" value={stats?.connectedDevices ?? "0"} type="devices" href="/devices" />
+          <StatCard title="Alarms Triggered" value={stats?.alarmsTriggered ?? "0"} type="alarms" href="/alarms" />
         </div>
 
         <UserTable 

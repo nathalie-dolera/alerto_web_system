@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 interface StatCardProps {
   title: string;
-  value: string;
+  value: string | number;
   type: "users" | "devices" | "alarms" | "registeredUsers";
   href: string;
   description?: string;

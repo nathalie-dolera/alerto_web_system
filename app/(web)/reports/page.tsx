@@ -431,11 +431,9 @@ export default function ReportsPage() {
                         }
 
                         const bars = [
-                          { label: 'Route Dev.', sublabel: '(Caution)', secs: routeDevSecs, color: 'bg-yellow-600', border: 'border-t-yellow-500', textColor: 'text-yellow-300' },
-                          { label: 'Anti-Theft', sublabel: '(Emergency)', secs: antiTheftSecs, color: 'bg-red-900/80', border: 'border-t-red-500', textColor: 'text-red-300' },
-                          { label: 'Drowsiness', sublabel: '(Emergency)', secs: drowsinessSecs, color: 'bg-purple-900/80', border: 'border-t-purple-500', textColor: 'text-purple-300' },
-                          { label: 'Commute\nMonitor', sublabel: '(Overall)', secs: overallSecs, color: 'bg-blue-900/80', border: 'border-t-blue-400', textColor: 'text-blue-300' },
-                        ];
+                           { label: 'Anti-Theft', sublabel: '(Emergency)', secs: antiTheftSecs, color: 'bg-red-900/80', border: 'border-t-red-500', textColor: 'text-red-300' },
+                           { label: 'Commute\nMonitor', sublabel: '(Overall)', secs: overallSecs, color: 'bg-blue-900/80', border: 'border-t-blue-400', textColor: 'text-blue-300' },
+                         ];
 
                         return (
                           <div className="flex items-end justify-around gap-3 px-2 pb-2 pt-4 mt-auto">

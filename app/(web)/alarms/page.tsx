@@ -38,7 +38,7 @@ function getDateThreshold(range: DateRange): Date | null {
 export default function AlarmsPage() {
   const { alarms, loading } = useAlarms();
 
-  const [activeTab, setActiveTab] = useState<Tab>("history");
+  const [activeTab, setActiveTab] = useState<Tab>("active");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [dateRange, setDateRange] = useState<DateRange>("all");

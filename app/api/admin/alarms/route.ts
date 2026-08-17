@@ -18,6 +18,8 @@ const TRIGGER_LABELS: Record<string, string> = {
   hazard: 'Road Hazard Alert',
   flood: 'Flood Risk Alert',
   accident: 'Traffic Incident Alert',
+  SNORING: 'Hazard Alert',
+  snoring: 'Hazard Alert',
 };
 
 function formatTrigger(raw: string): string {

@@ -73,22 +73,17 @@ export async function getDashboardData(): Promise<DashboardData> {
     }
 
     const usersWithRealtimeStatus = allUsersFromDb.map((user) => {
-      // If user is marked isOnline=false, they are immediately Offline/Inactive
-      if (!user.isOnline) {
-        return {
-          ...user,
-          isActuallyActive: false,
-        };
-      }
-
-      // If user is isOnline=true, verify lastActive is within the heartbeat threshold
-      const isFresh = user.lastActive 
-        ? (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
-        : true;
+      const hasLiveHeartbeat = Boolean(
+        user.isOnline &&
+        user.lastActive &&
+        (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
+      );
+      const hasRecentTrip = recentTripUserIds.has(user.id);
+      const hasRecentAlert = recentAlertUserIds.has(user.id);
 
       return {
         ...user,
-        isActuallyActive: isFresh,
+        isActuallyActive: hasLiveHeartbeat || hasRecentTrip || hasRecentAlert,
       };
     });
 

@@ -342,38 +342,50 @@ export default function ReportsPage() {
                      </div>
                    </div>
                    <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-6 min-h-[300px] flex flex-col">
-                      <h3 className="text-lg font-semibold text-white mb-6">User Base Overview</h3>
-                      <div className="grid grid-cols-2 gap-8 mb-8">
-                        <div>
-                          <h4 className="text-slate-400 text-sm mb-2">Registered Users</h4>
-                          <span className="text-4xl font-bold text-white">{currentSnapshot.registeredUsersCount ?? 0}</span>
-                        </div>
-                        <div>
-                          <h4 className="text-slate-400 text-sm mb-2">Total Monitored Hours</h4>
-                          <span className="text-4xl font-bold text-blue-400">
-                            {currentSnapshot.totalMonitoredHours != null 
-                              ? (Math.round(currentSnapshot.totalMonitoredHours * 10) / 10).toFixed(1)
-                              : "0.0"}
-                            <span className="text-base font-normal text-slate-400 ml-1">hrs</span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-slate-700/50 h-3 rounded-full overflow-hidden mt-auto mb-4">
-                         <div 
-                           className="bg-blue-500 h-full rounded-full transition-all duration-1000" 
-                           style={{ width: `${Math.min(100, (((currentSnapshot.activeCommutersCount ?? 0) / Math.max(1, currentSnapshot.registeredUsersCount ?? 1)) * 100))}%` }}
-                         ></div>
-                      </div>
-                      <p className="text-slate-400 text-sm text-center">
-                        {currentSnapshot.activeCommutersCount ?? 0} active commuters ({Math.round(((currentSnapshot.activeCommutersCount ?? 0) / Math.max(1, currentSnapshot.registeredUsersCount ?? 1)) * 100)}% of user base active in this period)
-                      </p>
+                       <h3 className="text-lg font-semibold text-white mb-4">Peak Commute Times</h3>
+                       {(() => {
+                         const breakdown = currentSnapshot.commuteTimesBreakdown || { morning: 0, noon: 0, evening: 0 };
+                         const peak = currentSnapshot.peakCommutePeriod || 'Morning';
+                         const total = (breakdown.morning || 0) + (breakdown.noon || 0) + (breakdown.evening || 0);
+                         const bars = [
+                           { label: 'Morning', sublabel: '5AM – 12PM', count: breakdown.morning || 0, color: 'bg-orange-500', light: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/40' },
+                           { label: 'Noon', sublabel: '12PM – 5PM', count: breakdown.noon || 0, color: 'bg-yellow-500', light: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/40' },
+                           { label: 'Evening', sublabel: '5PM – 5AM', count: breakdown.evening || 0, color: 'bg-indigo-500', light: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/40' },
+                         ];
+                         return (
+                           <div className="flex flex-col gap-3 flex-1">
+                             {bars.map((bar) => {
+                               const pct = total > 0 ? Math.round((bar.count / total) * 100) : 0;
+                               const isPeak = bar.label === peak;
+                               return (
+                                 <div key={bar.label} className={`rounded-lg p-3 border ${bar.light} ${bar.border} ${isPeak ? 'ring-1 ring-white/10' : ''}`}>
+                                   <div className="flex items-center justify-between mb-1.5">
+                                     <div className="flex items-center gap-2">
+                                       <span className={`text-sm font-semibold ${bar.text}`}>{bar.label}</span>
+                                       {isPeak && <span className="text-[9px] font-bold bg-white/10 text-white px-1.5 py-0.5 rounded-full tracking-wider">PEAK</span>}
+                                     </div>
+                                     <span className={`text-sm font-bold ${bar.text}`}>{bar.count} trips</span>
+                                   </div>
+                                   <div className="w-full bg-slate-700/50 h-1.5 rounded-full overflow-hidden">
+                                     <div className={`${bar.color} h-full rounded-full transition-all duration-700`} style={{ width: `${pct}%` }} />
+                                   </div>
+                                   <p className="text-slate-500 text-[10px] mt-1">{bar.sublabel} · {pct}% of trips</p>
+                                 </div>
+                               );
+                             })}
+                             <p className="text-slate-400 text-xs text-center mt-auto pt-2">
+                               {currentSnapshot.activeCommutersCount ?? 0} active commuters · {total} total trips in {rangeLabel}
+                             </p>
+                           </div>
+                         );
+                       })()}
                    </div>
                 </div>
               );
             case "Alarm History":
               const triggers = currentSnapshot.topAnomalyTriggers || [];
               const topTrigger1 = triggers[0] || { trigger: 'Drowsiness', count: 0 };
-              const topTrigger2 = triggers[1] || { trigger: 'Snoring', count: 0 };
+              const topTrigger2 = triggers[1] || { trigger: 'Hazard', count: 0 };
               const topTrigger3 = triggers[2] || { trigger: 'Anti-Theft', count: 0 };
               const topTrigger4 = triggers[3] || { trigger: 'Route Dev.', count: 0 };
               
@@ -397,17 +409,56 @@ export default function ReportsPage() {
                   <div className="xl:col-span-2 bg-[#242F41] border border-slate-700/40 rounded-xl p-5 flex flex-col justify-between relative transition-all duration-300">
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-1">Average Response Time</h3>
-                        <p className="text-slate-400 text-xs mb-3">Time taken to acknowledge and resolve commute alerts and anti-theft alarms across the system ({rangeLabel}).</p>
+                        <p className="text-slate-400 text-xs mb-4">Time taken to acknowledge and resolve commute alerts and anti-theft alarms ({rangeLabel}).</p>
                       </div>
-                      <div className="flex flex-col items-center justify-center py-4 my-auto">
-                        <div className="text-center">
-                          <span className="text-5xl font-bold text-blue-400 block mb-1">{currentSnapshot.averageResponseTimeMs ? Math.round(currentSnapshot.averageResponseTimeMs / 1000) : 0}s</span>
-                          <span className="text-slate-300 text-sm">System-wide Average</span>
-                        </div>
-                        {(!currentSnapshot.averageResponseTimeMs || currentSnapshot.averageResponseTimeMs === 0) && (
-                          <span className="text-xs text-slate-500 mt-2 italic">No response time data logged by mobile app for this period.</span>
-                        )}
-                      </div>
+                      {(() => {
+                        const byType = currentSnapshot.avgResponseByType || {};
+                        const routeDevSecs = byType.routeDev ? Math.round(byType.routeDev / 1000) : 0;
+                        const antiTheftSecs = byType.antiTheft ? Math.round(byType.antiTheft / 1000) : 0;
+                        const drowsinessSecs = byType.drowsiness ? Math.round(byType.drowsiness / 1000) : 0;
+                        const overallSecs = byType.overall ? Math.round(byType.overall / 1000) : (currentSnapshot.averageResponseTimeMs ? Math.round(currentSnapshot.averageResponseTimeMs / 1000) : 0);
+                        const maxSecs = Math.max(routeDevSecs, antiTheftSecs, drowsinessSecs, overallSecs, 1);
+                        const hasData = overallSecs > 0;
+
+                        if (!hasData) {
+                          return (
+                            <div className="flex flex-col items-center justify-center py-6 text-center">
+                              <span className="text-5xl font-bold text-blue-400 block mb-1">0s</span>
+                              <span className="text-slate-300 text-sm">System-wide Average</span>
+                              <span className="text-xs text-slate-500 mt-2 italic">No response time data logged for this period.</span>
+                            </div>
+                          );
+                        }
+
+                        const bars = [
+                          { label: 'Route Dev.', sublabel: '(Caution)', secs: routeDevSecs, color: 'bg-yellow-600', border: 'border-t-yellow-500', textColor: 'text-yellow-300' },
+                          { label: 'Anti-Theft', sublabel: '(Emergency)', secs: antiTheftSecs, color: 'bg-red-900/80', border: 'border-t-red-500', textColor: 'text-red-300' },
+                          { label: 'Drowsiness', sublabel: '(Emergency)', secs: drowsinessSecs, color: 'bg-purple-900/80', border: 'border-t-purple-500', textColor: 'text-purple-300' },
+                          { label: 'Commute\nMonitor', sublabel: '(Overall)', secs: overallSecs, color: 'bg-blue-900/80', border: 'border-t-blue-400', textColor: 'text-blue-300' },
+                        ];
+
+                        return (
+                          <div className="flex items-end justify-around gap-3 px-2 pb-2 pt-4 mt-auto">
+                            {bars.map((bar) => {
+                              const heightPct = Math.max(15, Math.round((bar.secs / maxSecs) * 100));
+                              const label = bar.secs > 0 ? (bar.secs >= 60 ? `${Math.floor(bar.secs/60)}m ${bar.secs % 60}s` : `${bar.secs}s`) : '—';
+                              return (
+                                <div key={bar.label} className="flex flex-col items-center gap-2 flex-1">
+                                  <span className={`text-sm font-bold ${bar.textColor}`}>{label}</span>
+                                  <div
+                                    className={`w-full max-w-[72px] rounded-sm border-t-2 ${bar.color} ${bar.border} transition-all duration-700`}
+                                    style={{ height: `${heightPct * 1.2}px` }}
+                                  />
+                                  <div className="text-center">
+                                    <p className="text-slate-300 text-xs whitespace-pre-line leading-tight">{bar.label}</p>
+                                    <p className="text-slate-500 text-[10px]">{bar.sublabel}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
                   </div>
                 </div>
               );

@@ -86,8 +86,9 @@ function getTopTrigger(trips: TripSummary[]) {
     if (upper.includes('SOS') || upper.includes('THEFT')) return 'Anti-Theft';
     if (upper.includes('IDLE')) return 'Idle Time';
     if (upper.includes('OFF_ROUTE') || upper.includes('ROUTE')) return 'Route Dev.';
-    if (upper.includes('SNORING')) return 'Snoring';
+    if (upper.includes('SNORING')) return 'Hazard';
     if (upper.includes('DROWS')) return 'Drowsiness';
+    if (upper.includes('HAZARD')) return 'Hazard';
     return raw.replace(/_/g, ' ');
   };
 
@@ -115,11 +116,12 @@ function buildFallbackAnalysis(tab: ReportTab, snapshot: Record<string, unknown>
 
   switch (tab) {
     case 'User Activity': {
-      const monitoredHours = Math.round(((snapshot.totalMonitoredHours as number) || 0) * 10) / 10;
+      const breakdown = (snapshot.commuteTimesBreakdown as { morning: number; noon: number; evening: number }) || { morning: 0, noon: 0, evening: 0 };
+      const peakPeriod = (snapshot.peakCommutePeriod as string) || 'Morning';
       return {
         ...generatedBase,
-        compilation: `User activity for ${periodPhrase} recorded ${(snapshot.tripsCount as number) ?? 0} trips across ${(snapshot.activeCommutersCount as number) ?? 0} active commuters, totaling ${monitoredHours} hours of active monitoring.`,
-        recommendation: 'Monitor peak trip creation periods and maintain commuter reachability during active commute windows.',
+        compilation: `AI-generated insight for ${periodPhrase}: Peak Commute Time is during the ${peakPeriod} (Morning: ${breakdown.morning}, Noon: ${breakdown.noon}, Evening: ${breakdown.evening} trips). Commuter habits show concentrated activity in this window.`,
+        recommendation: `Allocate additional safety monitoring resources during the ${peakPeriod} peak commute period and ensure user locations are updated before trips begin.`,
       };
     }
     case 'Alarm History':
@@ -295,6 +297,38 @@ async function buildReportSnapshot(tab: ReportTab, range: TimeRange = '30d') {
   });
   const devicesList = await Promise.all(devicesListPromises);
 
+  // Categorize trip start times to identify Peak Commute Times
+  let morningTripsCount = 0; // 5 AM – 11:59 AM
+  let noonTripsCount = 0;    // 12 PM – 4:59 PM
+  let eveningTripsCount = 0; // 5 PM – 4:59 AM
+
+  for (const trip of recentTrips as any[]) {
+    if (!trip.date) continue;
+    const hours = new Date(trip.date).getHours();
+    if (hours >= 5 && hours < 12) {
+      morningTripsCount++;
+    } else if (hours >= 12 && hours < 17) {
+      noonTripsCount++;
+    } else {
+      eveningTripsCount++;
+    }
+  }
+
+  let peakCommutePeriod = 'Evening';
+  let maxCount = eveningTripsCount;
+  if (morningTripsCount > maxCount) {
+    peakCommutePeriod = 'Morning';
+    maxCount = morningTripsCount;
+  }
+  if (noonTripsCount > maxCount) {
+    peakCommutePeriod = 'Noon';
+  }
+
+  // Compute per-type average response times for bar chart
+  const routeDevTrips = (recentTrips as TripSummary[]).filter(t => t.anomalyTriggers.some(a => a.toUpperCase().includes('ROUTE') || a.toUpperCase().includes('OFF_ROUTE')));
+  const antiTheftTrips = (recentTrips as TripSummary[]).filter(t => t.anomalyTriggers.some(a => a.toUpperCase().includes('SOS') || a.toUpperCase().includes('THEFT')));
+  const drowsinessTrips = (recentTrips as TripSummary[]).filter(t => t.anomalyTriggers.some(a => a.toUpperCase().includes('DROWS')));
+
   return {
     tab,
     range,
@@ -304,6 +338,14 @@ async function buildReportSnapshot(tab: ReportTab, range: TimeRange = '30d') {
     activeCommutersCount,
     avgTripDurationMinutes,
     totalMonitoredHours: ((totalDurationMsAllTrips as number) / (1000 * 60 * 60)) || 0,
+    commuteTimesBreakdown: { morning: morningTripsCount, noon: noonTripsCount, evening: eveningTripsCount },
+    peakCommutePeriod,
+    avgResponseByType: {
+      routeDev: getAverageResponseTime(routeDevTrips),
+      antiTheft: getAverageResponseTime(antiTheftTrips),
+      drowsiness: getAverageResponseTime(drowsinessTrips),
+      overall: getAverageResponseTime(recentTrips as TripSummary[]),
+    },
     connectedDevicesCount: connectedDevicesInPeriod,
     totalDevices,
     lowBatteryUsersCount,
@@ -370,12 +412,13 @@ export async function generateReportAnalysis(tab: ReportTab, range: TimeRange = 
 You are the analytics assistant for Alerto, a commute safety monitoring system.
 Analyze the JSON snapshot for the "${tab}" report tab covering "${snapshot.period}".
 Produce concise admin-facing insights based on the observed data in this timeframe.
+${tab === 'User Activity' ? '\nFor User Activity: You MUST identify and mention the "Peak Commute Times" by checking the commuteTimesBreakdown field (morning/noon/evening trip counts). State which period has the highest count and provide an insight about commuter habits. Also reference user actions like updating saved locations if relevant.' : ''}
 
 Return only valid JSON with exactly these keys:
-- "compilation": 1 sentence summarizing the most important observed data for this period.
+- "compilation": 1 sentence summarizing the most important observed data for this period${tab === 'User Activity' ? ' — must include the Peak Commute Time period (Morning, Noon, or Evening) and trip distribution' : ''}.
 - "recommendation": 1 sentence with a practical next action.
 
-Do not invent metrics that are not present in the snapshot. Keep both sentences under 35 words each.
+Do not invent metrics that are not present in the snapshot. Keep both sentences under 40 words each.
 
 Snapshot:
 ${JSON.stringify(snapshot).slice(0, 12000)}

@@ -82,6 +82,7 @@ export async function GET() {
         time: new Date(timeSource).toLocaleString('en-PH', {
           dateStyle: 'medium',
           timeStyle: 'short',
+          timeZone: 'Asia/Manila',
         }),
         status,
         avatarBg: status === 'Triggered' ? 'bg-red-950' : status === 'Pending' ? 'bg-orange-950' : 'bg-slate-800',

@@ -304,7 +304,14 @@ async function buildReportSnapshot(tab: ReportTab, range: TimeRange = '30d') {
 
   for (const trip of recentTrips as any[]) {
     if (!trip.date) continue;
-    const hours = new Date(trip.date).getHours();
+    const date = new Date(trip.date);
+    const hours = parseInt(
+      new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        hour12: false,
+        timeZone: 'Asia/Manila',
+      }).format(date)
+    );
     if (hours >= 5 && hours < 12) {
       morningTripsCount++;
     } else if (hours >= 12 && hours < 18) {

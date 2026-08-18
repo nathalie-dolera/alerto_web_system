@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // If tracking is active and we have an active alarm/alert status (Suspicious, SOS-Triggered, or anomalies)
-    if (active !== false && (safetyStatus === 'Suspicious' || safetyStatus === 'SOS-Triggered' || (anomalyTriggers && anomalyTriggers.length > 0))) {
+    // If tracking is active, always create/update the active trip record
+    if (active !== false) {
       const parsedLat = lat ? parseFloat(lat) : null;
       const parsedLng = lng ? parseFloat(lng) : null;
 
@@ -47,6 +47,15 @@ export async function POST(request: NextRequest) {
               lte: endRange,
             },
           },
+        });
+      } else {
+        // Fallback: find the most recent active trip for this user
+        existingTrip = await prisma.trip.findFirst({
+          where: {
+            userId,
+            durationMs: 0,
+          },
+          orderBy: { date: 'desc' },
         });
       }
 
@@ -105,6 +114,31 @@ export async function POST(request: NextRequest) {
             },
           });
         }
+      }
+    }
+
+    // If tracking is deactivated, close any active trips for this user to prevent them from getting stuck
+    if (active === false) {
+      try {
+        const activeTrip = await prisma.trip.findFirst({
+          where: {
+            userId,
+            durationMs: 0,
+          },
+          orderBy: { date: 'desc' },
+        });
+
+        if (activeTrip) {
+          const duration = Date.now() - new Date(activeTrip.date).getTime();
+          await prisma.trip.update({
+            where: { id: activeTrip.id },
+            data: {
+              durationMs: Math.max(1000, duration),
+            },
+          });
+        }
+      } catch (e) {
+        console.error('Error closing active trip:', e);
       }
     }
 

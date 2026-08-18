@@ -35,6 +35,7 @@ export async function GET() {
           { alertsTriggeredCount: { gt: 0 } },
           { safetyStatus: 'Suspicious' },
           { safetyStatus: 'SOS-Triggered' },
+          { durationMs: 0 },
         ],
       },
       include: {

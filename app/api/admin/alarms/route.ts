@@ -45,15 +45,11 @@ export async function GET() {
           },
         },
       },
-      orderBy: [
-        { sosTriggeredAt: 'desc' },
-        { suspiciousAt: 'desc' },
-        { date: 'desc' },
-      ],
+      orderBy: { date: 'desc' },
       take: 100,
     });
 
-    const alarms = trips.map((trip, index) => {
+    const mappedAlarms = trips.map((trip) => {
       const userName = trip.user?.name || trip.user?.email || 'Alerto User';
       const timeSource = trip.sosTriggeredAt || trip.suspiciousAt || trip.date;
 
@@ -77,7 +73,6 @@ export async function GET() {
         : [];
 
       return {
-        id: `AL-2026${index + 1}`,
         tripId: trip.id,
         initials: initialsFromName(userName),
         name: userName,
@@ -93,6 +88,15 @@ export async function GET() {
         avatarText: status === 'Triggered' ? 'text-red-300' : status === 'Pending' ? 'text-orange-300' : 'text-slate-400',
       };
     });
+
+    // Sort by actual triggered time descending (most recent first)
+    mappedAlarms.sort((a, b) => new Date(b.rawTime).getTime() - new Date(a.rawTime).getTime());
+
+    // Assign sequential IDs AL-20261, AL-20262...
+    const alarms = mappedAlarms.map((alarm, index) => ({
+      ...alarm,
+      id: `AL-2026${index + 1}`,
+    }));
 
     return NextResponse.json({ alarms });
   } catch (error) {

@@ -120,7 +120,7 @@ function buildFallbackAnalysis(tab: ReportTab, snapshot: Record<string, unknown>
       const peakPeriod = (snapshot.peakCommutePeriod as string) || 'Morning';
       return {
         ...generatedBase,
-        compilation: `AI-generated insight for ${periodPhrase}: Peak Commute Time is during the ${peakPeriod} (Morning: ${breakdown.morning}, Noon: ${breakdown.noon}, Evening: ${breakdown.evening} trips). Commuter habits show concentrated activity in this window.`,
+        compilation: `AI-generated insight for ${periodPhrase}: Peak Commute Time is during the ${peakPeriod} (Morning: ${breakdown.morning}, Afternoon: ${breakdown.noon}, Evening: ${breakdown.evening} trips). Commuter habits show concentrated activity in this window.`,
         recommendation: `Allocate additional safety monitoring resources during the ${peakPeriod} peak commute period and ensure user locations are updated before trips begin.`,
       };
     }
@@ -298,16 +298,16 @@ async function buildReportSnapshot(tab: ReportTab, range: TimeRange = '30d') {
   const devicesList = await Promise.all(devicesListPromises);
 
   // Categorize trip start times to identify Peak Commute Times
-  let morningTripsCount = 0; // 5 AM – 11:59 AM
-  let noonTripsCount = 0;    // 12 PM – 4:59 PM
-  let eveningTripsCount = 0; // 5 PM – 4:59 AM
+  let morningTripsCount = 0; // 5:00 AM – 11:59 AM
+  let noonTripsCount = 0;    // 12:00 PM – 5:59 PM (Afternoon)
+  let eveningTripsCount = 0; // 6:00 PM – 4:59 AM
 
   for (const trip of recentTrips as any[]) {
     if (!trip.date) continue;
     const hours = new Date(trip.date).getHours();
     if (hours >= 5 && hours < 12) {
       morningTripsCount++;
-    } else if (hours >= 12 && hours < 17) {
+    } else if (hours >= 12 && hours < 18) {
       noonTripsCount++;
     } else {
       eveningTripsCount++;
@@ -321,7 +321,7 @@ async function buildReportSnapshot(tab: ReportTab, range: TimeRange = '30d') {
     maxCount = morningTripsCount;
   }
   if (noonTripsCount > maxCount) {
-    peakCommutePeriod = 'Noon';
+    peakCommutePeriod = 'Afternoon';
   }
 
   // Compute per-type average response times for bar chart

@@ -348,9 +348,9 @@ export default function ReportsPage() {
                          const peak = currentSnapshot.peakCommutePeriod || 'Morning';
                          const total = (breakdown.morning || 0) + (breakdown.noon || 0) + (breakdown.evening || 0);
                          const bars = [
-                           { label: 'Morning', sublabel: '5AM – 12PM', count: breakdown.morning || 0, color: 'bg-orange-500', light: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/40' },
-                           { label: 'Noon', sublabel: '12PM – 5PM', count: breakdown.noon || 0, color: 'bg-yellow-500', light: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/40' },
-                           { label: 'Evening', sublabel: '5PM – 5AM', count: breakdown.evening || 0, color: 'bg-indigo-500', light: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/40' },
+                           { label: 'Morning', sublabel: '5:00 AM – 11:59 AM', count: breakdown.morning || 0, color: 'bg-orange-500', light: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/40' },
+                           { label: 'Afternoon', sublabel: '12:00 PM – 5:59 PM', count: breakdown.noon || 0, color: 'bg-yellow-500', light: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/40' },
+                           { label: 'Evening', sublabel: '6:00 PM – 4:59 AM', count: breakdown.evening || 0, color: 'bg-indigo-500', light: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/40' },
                          ];
                          return (
                            <div className="flex flex-col gap-3 flex-1">

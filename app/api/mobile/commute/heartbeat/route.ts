@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // If tracking is active and we have an active alarm/alert status (Suspicious or SOS-Triggered)
-    if (active !== false && (safetyStatus === 'Suspicious' || safetyStatus === 'SOS-Triggered')) {
+    // If tracking is active and we have an active alarm/alert status (Suspicious, SOS-Triggered, or anomalies)
+    if (active !== false && (safetyStatus === 'Suspicious' || safetyStatus === 'SOS-Triggered' || (anomalyTriggers && anomalyTriggers.length > 0))) {
       const parsedLat = lat ? parseFloat(lat) : null;
       const parsedLng = lng ? parseFloat(lng) : null;
 

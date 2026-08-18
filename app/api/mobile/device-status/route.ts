@@ -22,6 +22,7 @@ export async function POST(req: Request) {
         data: {
           deviceId,
           isOnline: true,
+          isDeviceConnected: true,
           lastActive: new Date(),
         },
       });
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
         data: {
           deviceId,
           isOnline: true,
+          isDeviceConnected: true,
           lastActive: new Date(),
         },
       });
@@ -39,6 +41,7 @@ export async function POST(req: Request) {
         where: { email },
         data: {
           isOnline: false,
+          isDeviceConnected: false,
           lastActive: new Date(),
         },
       });

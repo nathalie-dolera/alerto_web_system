@@ -78,12 +78,10 @@ export async function getDashboardData(): Promise<DashboardData> {
         user.lastActive &&
         (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
       );
-      const hasRecentTrip = recentTripUserIds.has(user.id);
-      const hasRecentAlert = recentAlertUserIds.has(user.id);
 
       return {
         ...user,
-        isActuallyActive: hasLiveHeartbeat || hasRecentTrip || hasRecentAlert,
+        isActuallyActive: hasLiveHeartbeat,
       };
     });
 

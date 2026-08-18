@@ -73,10 +73,8 @@ export async function GET() {
           user.lastActive &&
           (now - new Date(user.lastActive).getTime() <= HEARTBEAT_THRESHOLD_MS)
         );
-        const hasRecentTrip = recentTripUserIds.has(user.id);
-        const hasRecentAlert = recentAlertUserIds.has(user.id);
 
-        const isUserActive = hasLiveHeartbeat || hasRecentTrip || hasRecentAlert;
+        const isUserActive = hasLiveHeartbeat;
 
         return {
           id: user.id,

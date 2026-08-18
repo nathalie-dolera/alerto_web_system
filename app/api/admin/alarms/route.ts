@@ -62,6 +62,8 @@ export async function GET() {
         status = 'Triggered';
       } else if (trip.safetyStatus === 'Suspicious') {
         status = 'Pending';
+      } else if (trip.durationMs === 0) {
+        status = 'Pending';
       } else {
         status = 'Resolved';
       }

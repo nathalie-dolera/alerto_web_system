@@ -194,6 +194,8 @@ async function buildReportSnapshot(tab: ReportTab, range: TimeRange = '30d') {
             anomalyCount: true,
             anomalyTriggers: true,
             routeRecognitionStatus: true,
+            bookingType: true,
+            screenshotUrl: true,
           },
           orderBy: { date: 'desc' },
           take: 50,
@@ -381,6 +383,8 @@ async function buildReportSnapshot(tab: ReportTab, range: TimeRange = '30d') {
       anomalyCount: trip.anomalyCount,
       anomalyTriggers: trip.anomalyTriggers,
       routeRecognitionStatus: trip.routeRecognitionStatus,
+      bookingType: trip.bookingType || null,
+      screenshotUrl: trip.screenshotUrl || null,
     })),
   };
 }

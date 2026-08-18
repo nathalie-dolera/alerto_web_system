@@ -134,9 +134,14 @@ export default function ReportsPage() {
         avgResponse = `${inSeconds}s`;
       }
 
+      const isBookingScan = Boolean(trip.screenshotUrl || trip.bookingType);
+      const description = isBookingScan
+        ? 'User uploaded a booking screenshot.'
+        : `Trip to ${trip.destinationName || 'Unknown'} (${trip.durationMinutes} mins) - ${trip.anomalyCount} anomalies.`;
+
       return {
         id: `TRP-${tripYear}${count}`,
-        description: `Trip to ${trip.destinationName || 'Unknown'} (${trip.durationMinutes} mins) - ${trip.anomalyCount} anomalies.`,
+        description,
         avgResponse,
         date: new Date(trip.date).toLocaleString(),
         status: trip.safetyStatus === 'Suspicious' ? 'Caution' : trip.safetyStatus === 'SOS-Triggered' ? 'Emergency' : trip.anomalyCount > 0 ? 'Notice' : 'Normal',

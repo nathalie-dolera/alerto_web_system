@@ -54,9 +54,11 @@ export default function AlarmsPage() {
   const filteredAlarms = useMemo(() => {
     let result = [...alarms];
 
-    // Tab filter: active = Pending or Triggered
+    // Tab filter: active = Pending or Triggered, history = Resolved
     if (activeTab === "active") {
       result = result.filter((alarm) => alarm.status === "Pending" || alarm.status === "Triggered");
+    } else if (activeTab === "history") {
+      result = result.filter((alarm) => alarm.status === "Resolved");
     }
 
     // Status filter

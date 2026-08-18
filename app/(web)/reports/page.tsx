@@ -383,27 +383,69 @@ export default function ReportsPage() {
                 </div>
               );
             case "Alarm History":
-              const triggers = currentSnapshot.topAnomalyTriggers || [];
-              const topTrigger1 = triggers[0] || { trigger: 'Drowsiness', count: 0 };
-              const topTrigger2 = triggers[1] || { trigger: 'Hazard', count: 0 };
-              const topTrigger3 = triggers[2] || { trigger: 'Anti-Theft', count: 0 };
-              const topTrigger4 = triggers[3] || { trigger: 'Route Dev.', count: 0 };
+              const triggersList = currentSnapshot.topAnomalyTriggers || [];
+              const getCountFor = (keywords: string[]) => {
+                const item = triggersList.find((t: any) => keywords.some(k => t.trigger.toLowerCase().includes(k.toLowerCase())));
+                return item ? item.count : 0;
+              };
+
+              const idleCount = getCountFor(['idle', 'drowsiness', 'snoring']);
+              const hazardCount = getCountFor(['hazard', 'congestion', 'flood', 'accident']);
+              const theftCount = getCountFor(['anti-theft', 'sos', 'theft']);
+              const routeCount = getCountFor(['route', 'off_route', 'deviation']);
+
+              const categories = [
+                { label: 'Idle Time', count: idleCount, color: '#A855F7', dotClass: 'bg-purple-500' },
+                { label: 'Hazard', count: hazardCount, color: '#3B82F6', dotClass: 'bg-blue-500' },
+                { label: 'Anti-Theft', count: theftCount, color: '#EF4444', dotClass: 'bg-red-500' },
+                { label: 'Route Dev.', count: routeCount, color: '#F59E0B', dotClass: 'bg-yellow-500' },
+              ];
+
+              const categorySum = categories.reduce((sum, c) => sum + c.count, 0);
+              const displayTotal = currentSnapshot.anomalyTripsCount ?? categorySum;
+              const grandTotal = categorySum > 0 ? categorySum : displayTotal;
+
+              let donutGradient = 'conic-gradient(#334155 0% 100%)';
+              if (grandTotal > 0 && categorySum > 0) {
+                let currentPct = 0;
+                const stops: string[] = [];
+                categories.forEach((cat) => {
+                  if (cat.count > 0) {
+                    const pct = (cat.count / grandTotal) * 100;
+                    const nextPct = currentPct + pct;
+                    stops.push(`${cat.color} ${currentPct.toFixed(1)}% ${nextPct.toFixed(1)}%`);
+                    currentPct = nextPct;
+                  }
+                });
+                if (stops.length > 0) {
+                  donutGradient = `conic-gradient(${stops.join(', ')})`;
+                }
+              } else if (displayTotal > 0) {
+                // Default to purple if incidents exist but triggers are unclassified
+                donutGradient = 'conic-gradient(#A855F7 0% 100%)';
+              }
               
               return (
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
                   <div className="bg-[#242F41] border border-slate-700/40 rounded-xl p-5 flex flex-col items-center justify-center">
                      <h4 className="text-slate-400 text-sm font-medium mb-4 text-center">Commute Anomalies ({rangeLabel})</h4>
-                     <div className="relative w-32 h-32 rounded-full border-[16px] border-slate-700/30 border-t-red-500 border-r-purple-500 border-b-blue-500 border-l-yellow-500 flex items-center justify-center shadow-inner">
-                        <div className="flex flex-col items-center">
-                          <span className="text-2xl font-bold text-white">{currentSnapshot.anomalyTripsCount ?? 0}</span>
+                     <div 
+                       className="relative w-32 h-32 rounded-full p-3 flex items-center justify-center shadow-lg transition-all duration-500"
+                       style={{ background: donutGradient }}
+                     >
+                        <div className="w-24 h-24 rounded-full bg-[#242F41] flex flex-col items-center justify-center shadow-inner">
+                          <span className="text-2xl font-bold text-white">{displayTotal}</span>
                           <span className="text-[10px] text-slate-400 uppercase tracking-wider">Incidents</span>
                         </div>
                      </div>
                      <div className="grid grid-cols-2 gap-3 w-full mt-4 text-sm">
-                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-purple-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger1.trigger}</span><span className="font-bold text-white text-xs">{topTrigger1.count}</span></div>
-                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger2.trigger}</span><span className="font-bold text-white text-xs">{topTrigger2.count}</span></div>
-                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger3.trigger}</span><span className="font-bold text-white text-xs">{topTrigger3.count}</span></div>
-                        <div className="flex flex-col items-center gap-0.5"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><span className="text-slate-300 text-xs truncate max-w-full">{topTrigger4.trigger}</span><span className="font-bold text-white text-xs">{topTrigger4.count}</span></div>
+                        {categories.map((cat) => (
+                          <div key={cat.label} className="flex flex-col items-center gap-0.5">
+                            <div className={`w-2.5 h-2.5 rounded-full ${cat.dotClass}`} />
+                            <span className="text-slate-300 text-xs truncate max-w-full">{cat.label}</span>
+                            <span className="font-bold text-white text-xs">{cat.count}</span>
+                          </div>
+                        ))}
                      </div>
                   </div>
                   <div className="xl:col-span-2 bg-[#242F41] border border-slate-700/40 rounded-xl p-5 flex flex-col justify-between relative transition-all duration-300">

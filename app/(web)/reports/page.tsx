@@ -407,66 +407,60 @@ export default function ReportsPage() {
                      </div>
                   </div>
                   <div className="xl:col-span-2 bg-[#242F41] border border-slate-700/40 rounded-xl p-5 flex flex-col justify-between relative transition-all duration-300">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white mb-1">Average Response Time</h3>
-                        <p className="text-slate-400 text-xs mb-4">Time taken to acknowledge and resolve commute alerts and anti-theft alarms ({rangeLabel}).</p>
-                      </div>
-                      {(() => {
-                        const byType = currentSnapshot.avgResponseByType || {};
-                        const antiTheftSecs = byType.antiTheft ? Math.round(byType.antiTheft / 1000) : 0;
-                        const overallSecs = byType.overall ? Math.round(byType.overall / 1000) : (currentSnapshot.averageResponseTimeMs ? Math.round(currentSnapshot.averageResponseTimeMs / 1000) : 0);
-                        const maxSecs = Math.max(antiTheftSecs, overallSecs, 1);
+                       <div>
+                         <h3 className="text-lg font-semibold text-white">Average Response Time</h3>
+                       </div>
+                       {(() => {
+                         const byType = currentSnapshot.avgResponseByType || {};
+                         const antiTheftSecs = byType.antiTheft ? Math.round(byType.antiTheft / 1000) : 0;
+                         const overallSecs = byType.overall ? Math.round(byType.overall / 1000) : (currentSnapshot.averageResponseTimeMs ? Math.round(currentSnapshot.averageResponseTimeMs / 1000) : 0);
+                         const maxSecs = Math.max(antiTheftSecs, overallSecs, 1);
 
-                        const bars = [
-                          { 
-                            label: 'Anti-Theft', 
-                            sublabel: '(Emergency)', 
-                            secs: antiTheftSecs, 
-                            color: 'bg-red-500/30', 
-                            barFill: 'bg-red-500',
-                            border: 'border-red-500/40', 
-                            textColor: 'text-red-400' 
-                          },
-                          { 
-                            label: 'Commute Monitor', 
-                            sublabel: '(Overall)', 
-                            secs: overallSecs, 
-                            color: 'bg-blue-500/30', 
-                            barFill: 'bg-blue-500',
-                            border: 'border-blue-500/40', 
-                            textColor: 'text-blue-400' 
-                          },
-                        ];
+                         // When 0s, both bars have the exact same small baseline height (24px)
+                         // When response time data exists (>0s), heights scale dynamically up to 130px
+                         const antiTheftHeight = antiTheftSecs > 0 ? Math.max(24, Math.min(130, Math.round((antiTheftSecs / maxSecs) * 120))) : 24;
+                         const commuteHeight = overallSecs > 0 ? Math.max(24, Math.min(130, Math.round((overallSecs / maxSecs) * 120))) : 24;
 
-                        return (
-                          <div className="flex flex-col justify-end h-full">
-                            <div className="flex items-end justify-center gap-12 px-6 pb-2 pt-6 my-auto">
-                              {bars.map((bar) => {
-                                const heightPx = bar.secs > 0 ? Math.max(45, Math.min(120, Math.round((bar.secs / maxSecs) * 110))) : 35;
-                                const timeDisplay = bar.secs > 0 
-                                  ? (bar.secs >= 60 ? `${Math.floor(bar.secs / 60)}m ${bar.secs % 60}s` : `${bar.secs}s`)
-                                  : '0s';
-                                return (
-                                  <div key={bar.label} className="flex flex-col items-center gap-2.5 w-32">
-                                    <span className={`text-base font-bold ${bar.textColor}`}>{timeDisplay}</span>
-                                    <div
-                                      className={`w-full rounded-lg ${bar.color} border ${bar.border} flex items-end p-1 transition-all duration-700 shadow-md`}
-                                      style={{ height: `${heightPx}px` }}
-                                    >
-                                      <div className={`w-full rounded-md ${bar.barFill} h-full opacity-80`} />
-                                    </div>
-                                    <div className="text-center mt-1">
-                                      <p className="text-slate-200 text-xs font-medium leading-tight">{bar.label}</p>
-                                      <p className="text-slate-400 text-[11px] mt-0.5">{bar.sublabel}</p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                  </div>
+                         const bars = [
+                           { 
+                             label: 'Anti-Theft', 
+                             secs: antiTheftSecs, 
+                             height: antiTheftHeight,
+                             bgColor: 'bg-red-500', 
+                             borderColor: 'border border-red-500/30', 
+                             textColor: 'text-red-400' 
+                           },
+                           { 
+                             label: 'Commute Monitor', 
+                             secs: overallSecs, 
+                             height: commuteHeight,
+                             bgColor: 'bg-blue-500', 
+                             borderColor: 'border border-blue-500/30', 
+                             textColor: 'text-blue-400' 
+                           },
+                         ];
+
+                         return (
+                           <div className="flex items-end justify-center gap-16 px-6 pb-2 pt-4 my-auto">
+                             {bars.map((bar) => {
+                               const timeDisplay = bar.secs > 0 
+                                 ? (bar.secs >= 60 ? `${Math.floor(bar.secs / 60)}m ${bar.secs % 60}s` : `${bar.secs}s`)
+                                 : '0s';
+                               return (
+                                 <div key={bar.label} className="flex flex-col items-center gap-2 w-28">
+                                   <span className={`text-base font-bold ${bar.textColor}`}>{timeDisplay}</span>
+                                   <div
+                                     className={`w-full rounded-md ${bar.bgColor} ${bar.borderColor} shadow-md transition-all duration-700`}
+                                     style={{ height: `${bar.height}px` }}
+                                   />
+                                   <p className="text-slate-200 text-xs font-semibold text-center mt-1">{bar.label}</p>
+                                 </div>
+                               );
+                             })}
+                           </div>
+                         );
+                       })()}
+                   </div>
                 </div>
               );
             case "Device Metrics":

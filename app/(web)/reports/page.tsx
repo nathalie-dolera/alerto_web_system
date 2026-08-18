@@ -413,47 +413,56 @@ export default function ReportsPage() {
                       </div>
                       {(() => {
                         const byType = currentSnapshot.avgResponseByType || {};
-                        const routeDevSecs = byType.routeDev ? Math.round(byType.routeDev / 1000) : 0;
                         const antiTheftSecs = byType.antiTheft ? Math.round(byType.antiTheft / 1000) : 0;
-                        const drowsinessSecs = byType.drowsiness ? Math.round(byType.drowsiness / 1000) : 0;
                         const overallSecs = byType.overall ? Math.round(byType.overall / 1000) : (currentSnapshot.averageResponseTimeMs ? Math.round(currentSnapshot.averageResponseTimeMs / 1000) : 0);
-                        const maxSecs = Math.max(routeDevSecs, antiTheftSecs, drowsinessSecs, overallSecs, 1);
-                        const hasData = overallSecs > 0;
-
-                        if (!hasData) {
-                          return (
-                            <div className="flex flex-col items-center justify-center py-6 text-center">
-                              <span className="text-5xl font-bold text-blue-400 block mb-1">0s</span>
-                              <span className="text-slate-300 text-sm">System-wide Average</span>
-                              <span className="text-xs text-slate-500 mt-2 italic">No response time data logged for this period.</span>
-                            </div>
-                          );
-                        }
+                        const maxSecs = Math.max(antiTheftSecs, overallSecs, 1);
 
                         const bars = [
-                           { label: 'Anti-Theft', sublabel: '(Emergency)', secs: antiTheftSecs, color: 'bg-red-900/80', border: 'border-t-red-500', textColor: 'text-red-300' },
-                           { label: 'Commute\nMonitor', sublabel: '(Overall)', secs: overallSecs, color: 'bg-blue-900/80', border: 'border-t-blue-400', textColor: 'text-blue-300' },
-                         ];
+                          { 
+                            label: 'Anti-Theft', 
+                            sublabel: '(Emergency)', 
+                            secs: antiTheftSecs, 
+                            color: 'bg-red-500/30', 
+                            barFill: 'bg-red-500',
+                            border: 'border-red-500/40', 
+                            textColor: 'text-red-400' 
+                          },
+                          { 
+                            label: 'Commute Monitor', 
+                            sublabel: '(Overall)', 
+                            secs: overallSecs, 
+                            color: 'bg-blue-500/30', 
+                            barFill: 'bg-blue-500',
+                            border: 'border-blue-500/40', 
+                            textColor: 'text-blue-400' 
+                          },
+                        ];
 
                         return (
-                          <div className="flex items-end justify-around gap-3 px-2 pb-2 pt-4 mt-auto">
-                            {bars.map((bar) => {
-                              const heightPct = Math.max(15, Math.round((bar.secs / maxSecs) * 100));
-                              const label = bar.secs > 0 ? (bar.secs >= 60 ? `${Math.floor(bar.secs/60)}m ${bar.secs % 60}s` : `${bar.secs}s`) : '—';
-                              return (
-                                <div key={bar.label} className="flex flex-col items-center gap-2 flex-1">
-                                  <span className={`text-sm font-bold ${bar.textColor}`}>{label}</span>
-                                  <div
-                                    className={`w-full max-w-[72px] rounded-sm border-t-2 ${bar.color} ${bar.border} transition-all duration-700`}
-                                    style={{ height: `${heightPct * 1.2}px` }}
-                                  />
-                                  <div className="text-center">
-                                    <p className="text-slate-300 text-xs whitespace-pre-line leading-tight">{bar.label}</p>
-                                    <p className="text-slate-500 text-[10px]">{bar.sublabel}</p>
+                          <div className="flex flex-col justify-end h-full">
+                            <div className="flex items-end justify-center gap-12 px-6 pb-2 pt-6 my-auto">
+                              {bars.map((bar) => {
+                                const heightPx = bar.secs > 0 ? Math.max(45, Math.min(120, Math.round((bar.secs / maxSecs) * 110))) : 35;
+                                const timeDisplay = bar.secs > 0 
+                                  ? (bar.secs >= 60 ? `${Math.floor(bar.secs / 60)}m ${bar.secs % 60}s` : `${bar.secs}s`)
+                                  : '0s';
+                                return (
+                                  <div key={bar.label} className="flex flex-col items-center gap-2.5 w-32">
+                                    <span className={`text-base font-bold ${bar.textColor}`}>{timeDisplay}</span>
+                                    <div
+                                      className={`w-full rounded-lg ${bar.color} border ${bar.border} flex items-end p-1 transition-all duration-700 shadow-md`}
+                                      style={{ height: `${heightPx}px` }}
+                                    >
+                                      <div className={`w-full rounded-md ${bar.barFill} h-full opacity-80`} />
+                                    </div>
+                                    <div className="text-center mt-1">
+                                      <p className="text-slate-200 text-xs font-medium leading-tight">{bar.label}</p>
+                                      <p className="text-slate-400 text-[11px] mt-0.5">{bar.sublabel}</p>
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       })()}

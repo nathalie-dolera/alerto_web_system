@@ -17,11 +17,6 @@ export function AlarmsTable({ alarms }: { alarms: any[] }) {
           badge: 'border-red-500/30 text-red-400 bg-red-500/10',
           dot: 'bg-red-400',
         };
-      case 'Pending':
-        return {
-          badge: 'border-orange-500/30 text-orange-400 bg-orange-500/10',
-          dot: 'bg-orange-400',
-        };
       case 'Resolved':
         return {
           badge: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',

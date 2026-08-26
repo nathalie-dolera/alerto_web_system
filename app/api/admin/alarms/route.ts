@@ -58,9 +58,9 @@ export async function GET() {
       if (trip.safetyStatus === 'SOS-Triggered') {
         status = 'Triggered';
       } else if (trip.safetyStatus === 'Suspicious') {
-        status = 'Pending';
+        status = 'Triggered';
       } else if (trip.durationMs === 0) {
-        status = 'Pending';
+        status = 'Triggered';
       } else {
         status = 'Resolved';
       }
@@ -86,8 +86,8 @@ export async function GET() {
           timeZone: 'Asia/Manila',
         }),
         status,
-        avatarBg: status === 'Triggered' ? 'bg-red-950' : status === 'Pending' ? 'bg-orange-950' : 'bg-slate-800',
-        avatarText: status === 'Triggered' ? 'text-red-300' : status === 'Pending' ? 'text-orange-300' : 'text-slate-400',
+        avatarBg: status === 'Triggered' ? 'bg-red-950' : 'bg-slate-800',
+        avatarText: status === 'Triggered' ? 'text-red-300' : 'text-slate-400',
       };
     });
 

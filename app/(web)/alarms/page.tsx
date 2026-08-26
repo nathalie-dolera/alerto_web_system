@@ -7,7 +7,7 @@ import { ExportButton } from "@/components/dashboard/export-button";
 import { useAlarms } from "@/hooks/useAlarms";
 
 type Tab = "active" | "history";
-type StatusFilter = "all" | "Pending" | "Triggered" | "Resolved";
+type StatusFilter = "all" | "Triggered" | "Resolved";
 type DateRange = "all" | "today" | "7d" | "30d" | "90d";
 
 const DATE_RANGE_LABELS: Record<DateRange, string> = {
@@ -48,15 +48,15 @@ export default function AlarmsPage() {
   }, []);
 
   const activeAlarmCount = alarms.filter(
-    (alarm) => alarm.status === "Pending" || alarm.status === "Triggered"
+    (alarm) => alarm.status === "Triggered"
   ).length;
 
   const filteredAlarms = useMemo(() => {
     let result = [...alarms];
 
-    // Tab filter: active = Pending or Triggered, history = Resolved
+    // Tab filter: active = Triggered, history = Resolved
     if (activeTab === "active") {
-      result = result.filter((alarm) => alarm.status === "Pending" || alarm.status === "Triggered");
+      result = result.filter((alarm) => alarm.status === "Triggered");
     } else if (activeTab === "history") {
       result = result.filter((alarm) => alarm.status === "Resolved");
     }
@@ -163,7 +163,6 @@ export default function AlarmsPage() {
               className="bg-[#1B2435] text-sm text-white border border-slate-700/50 rounded-lg pl-9 pr-8 py-2.5 appearance-none focus:outline-none focus:border-slate-500"
             >
               <option value="all">Status: All</option>
-              <option value="Pending">Pending</option>
               <option value="Triggered">Triggered</option>
               <option value="Resolved">Resolved</option>
             </select>

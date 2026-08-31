@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" crossorigin="" />
 
   <style>
     :root {
@@ -203,29 +203,39 @@
       z-index: 2;
     }
 
-    .leaflet-control-zoom {
+    .maplibregl-ctrl-group {
+      background: transparent !important;
       border: 1px solid var(--border-color) !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
       border-radius: 12px !important;
       overflow: hidden;
     }
 
-    .leaflet-control-zoom-in,
-    .leaflet-control-zoom-out {
+    .maplibregl-ctrl button {
       background-color: var(--card-bg) !important;
-      color: var(--text-main) !important;
       border: none !important;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
 
-    .leaflet-control-zoom-in:hover,
-    .leaflet-control-zoom-out:hover {
+    .maplibregl-ctrl button:hover {
       background-color: rgba(59, 130, 246, 0.2) !important;
     }
 
-    .leaflet-bar {
-      border: none !important;
+    .maplibregl-ctrl-icon {
+      filter: invert(1);
+    }
+
+    .maplibregl-popup-content {
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .maplibregl-popup-close-button {
+      color: #475569;
+      font-size: 18px;
+      padding: 3px 6px;
     }
 
     @keyframes pulse {
@@ -306,8 +316,11 @@
 
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js" crossorigin=""></script>
   <script>
+    const BASE_MAP_URL = 'https://tiles.openfreemap.org/styles/liberty';
+    const DARK_MAP_URL = 'https://tiles.openfreemap.org/styles/dark';
+
     const params = new URLSearchParams(window.location.search);
     let lat = parseFloat(params.get('lat'));
     let lng = parseFloat(params.get('lng'));
@@ -321,37 +334,37 @@
     document.getElementById('lng-val').innerText = lng.toFixed(6);
     document.getElementById('time-val').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-    const map = L.map('map', {
-      zoomControl: true,
+    const prefersDarkMap = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: prefersDarkMap ? DARK_MAP_URL : BASE_MAP_URL,
+      center: [lng, lat],
+      zoom: 16,
       attributionControl: false
-    }).setView([lat, lng], 16);
-
-    map.zoomControl.setPosition('topright');
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20
-    }).addTo(map);
-
-    const radarIcon = L.divIcon({
-      className: 'radar-marker',
-      html: `
-        <div class="radar-icon-container">
-          <div class="radar-core"></div>
-          <div class="radar-ring"></div>
-        </div>
-      `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
     });
 
-    const marker = L.marker([lat, lng], { icon: radarIcon }).addTo(map);
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
-    marker.bindPopup(`
+    const markerElement = document.createElement('div');
+    markerElement.className = 'radar-marker';
+    markerElement.innerHTML = `
+      <div class="radar-icon-container">
+        <div class="radar-core"></div>
+        <div class="radar-ring"></div>
+      </div>
+    `;
+
+    const popup = new maplibregl.Popup({ offset: 18 }).setHTML(`
       <div style="color:#000; font-family:'Inter'; padding:2px;">
         <b style="font-weight:700;">Commuter Position</b><br>
         <span style="font-size:11px; color:#555;">Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}</span>
       </div>
     `);
+
+    new maplibregl.Marker({ element: markerElement, anchor: 'center' })
+      .setLngLat([lng, lat])
+      .setPopup(popup)
+      .addTo(map);
 
   </script>
 </body>

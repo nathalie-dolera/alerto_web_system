@@ -30,6 +30,8 @@ type HeatmapBuildOptions = {
 
 const METERS_PER_DEGREE_LAT = 111320;
 const DEFAULT_CLUSTER_SIZE_METERS = 180;
+const MAX_WEIGHT = 3; // Upper bound for UI heatmap weight
+
 const SOURCE_WEIGHTS: Record<string, number> = {
   TOMTOM: 1,
   AI_REPORT: 1,
@@ -65,7 +67,6 @@ function getCellKey(lat: number, lng: number, clusterSizeMeters: number) {
   const latCell = clusterSizeMeters / METERS_PER_DEGREE_LAT;
   const lngCell = clusterSizeMeters / (METERS_PER_DEGREE_LAT * Math.cos((lat * Math.PI) / 180));
   const safeLngCell = Number.isFinite(lngCell) && lngCell > 0 ? lngCell : latCell;
-
   return `${Math.floor(lat / latCell)}:${Math.floor(lng / safeLngCell)}`;
 }
 
@@ -108,7 +109,6 @@ export function buildRiskHeatmap(
     bucket.incidentCount += 1;
     bucket.weight += pointWeight;
     bucket.sourceCounts[sourceKey] = (bucket.sourceCounts[sourceKey] || 0) + 1;
-
     buckets.set(bucketKey, bucket);
   }
 
@@ -116,13 +116,13 @@ export function buildRiskHeatmap(
     .map(([id, bucket]) => {
       const dominantSource =
         Object.entries(bucket.sourceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'UNKNOWN';
-
+      const clampedWeight = Math.min(Number(bucket.weight.toFixed(2)), MAX_WEIGHT);
       return {
         id,
         lat: bucket.latTotal / bucket.incidentCount,
         lng: bucket.lngTotal / bucket.incidentCount,
         incidentCount: bucket.incidentCount,
-        weight: Number(bucket.weight.toFixed(2)),
+        weight: clampedWeight,
         source: dominantSource,
         sources: bucket.sourceCounts,
       };

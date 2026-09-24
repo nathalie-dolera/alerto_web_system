@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="" />
 
   <style>
     :root {
@@ -316,7 +316,7 @@
 
   <div id="map"></div>
 
-  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js" crossorigin=""></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
   <script>
     const BASE_MAP_URL = 'https://tiles.openfreemap.org/styles/liberty';
     const DARK_MAP_URL = 'https://tiles.openfreemap.org/styles/dark';
@@ -334,37 +334,61 @@
     document.getElementById('lng-val').innerText = lng.toFixed(6);
     document.getElementById('time-val').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-    const prefersDarkMap = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const map = new maplibregl.Map({
-      container: 'map',
-      style: prefersDarkMap ? DARK_MAP_URL : BASE_MAP_URL,
-      center: [lng, lat],
-      zoom: 16,
-      attributionControl: false
-    });
+    // Tile styles tried in order — all free, no API key needed
+    const MAP_STYLES = [
+      BASE_MAP_URL,
+      DARK_MAP_URL,
+      {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '\u00a9 OpenStreetMap contributors'
+          }
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+      }
+    ];
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    function addMarkerAndPopup(map) {
+      const markerElement = document.createElement('div');
+      markerElement.className = 'radar-marker';
+      markerElement.innerHTML = '<div class="radar-icon-container"><div class="radar-core"></div><div class="radar-ring"></div></div>';
 
-    const markerElement = document.createElement('div');
-    markerElement.className = 'radar-marker';
-    markerElement.innerHTML = `
-      <div class="radar-icon-container">
-        <div class="radar-core"></div>
-        <div class="radar-ring"></div>
-      </div>
-    `;
+      const popup = new maplibregl.Popup({ offset: 18 }).setHTML(
+        '<div style="color:#000; font-family:Inter; padding:2px;"><b style="font-weight:700;">Commuter Position</b><br><span style="font-size:11px; color:#555;">Lat: ' + lat.toFixed(5) + ', Lng: ' + lng.toFixed(5) + '</span></div>'
+      );
 
-    const popup = new maplibregl.Popup({ offset: 18 }).setHTML(`
-      <div style="color:#000; font-family:'Inter'; padding:2px;">
-        <b style="font-weight:700;">Commuter Position</b><br>
-        <span style="font-size:11px; color:#555;">Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}</span>
-      </div>
-    `);
+      new maplibregl.Marker({ element: markerElement, anchor: 'center' })
+        .setLngLat([lng, lat])
+        .setPopup(popup)
+        .addTo(map);
+    }
 
-    new maplibregl.Marker({ element: markerElement, anchor: 'center' })
-      .setLngLat([lng, lat])
-      .setPopup(popup)
-      .addTo(map);
+    function initMap(styleIdx) {
+      const map = new maplibregl.Map({
+        container: 'map',
+        style: MAP_STYLES[styleIdx],
+        center: [lng, lat],
+        zoom: 16,
+        attributionControl: false
+      });
+
+      map.on('error', function(e) {
+        console.warn('Map style', styleIdx, 'failed, trying fallback:', e && e.error && e.error.message);
+        if (styleIdx + 1 < MAP_STYLES.length) {
+          map.remove();
+          initMap(styleIdx + 1);
+        }
+      });
+
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+      map.on('load', function() { addMarkerAndPopup(map); });
+    }
+
+    initMap(0);
 
   </script>
 </body>

@@ -19,6 +19,8 @@ model User {
   status      String       @default("Active")
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
+  otpCode              String?
+  otpExpires          DateTime?
   deviceId    String?      
   isDeviceConnected Boolean @default(false)
   isOnline    Boolean      @default(false) 

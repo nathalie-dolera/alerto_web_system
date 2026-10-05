@@ -94,11 +94,44 @@ async function sendGoogleOtpEmail(user: { email: string; name: string | null }, 
         content: [
           {
             type: 'text/plain',
-            value: `Dear ${recipientName},\n\nThank you for signing up with Alerto via Google. To complete your account verification, please enter the OTP below:\n\n${otp}\n\nThis code is valid for 10 minutes.\n\nSincerely,\nAlerto Verification Services`,
+            value: `Dear ${recipientName},\n\nThank you for signing up with Alerto via Google. To complete your account verification, please enter the One-Time Password (OTP) below:\n\n${otp}\n\nThis code is valid for ten (10) minutes.\n\nIf you did not initiate this request, please disregard this message or contact us at alerto.system2026@gmail.com.\n\nSincerely,\nAlerto Verification Services\nalerto.system2026@gmail.com`,
           },
           {
             type: 'text/html',
-            value: `<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;"><div style="background-color: #0b1723; padding: 22px; text-align: center; color: #ffffff;"><h2 style="margin: 0; font-size: 19px;">ALERTO ACCOUNT VERIFICATION</h2></div><div style="padding: 28px; color: #1a202c;"><p>Dear <strong>${recipientName}</strong>,</p><p>Thank you for signing up with Alerto via <strong>Google</strong>. Please use the OTP below to verify your account:</p><div style="background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;"><div style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #0b1723; font-family: monospace;">${otp}</div><p style="margin: 8px 0 0 0; color: #718096; font-size: 13px;">Expires in <strong>10 minutes</strong>.</p></div><p style="font-size: 13px; color: #4a5568;"><strong>Security:</strong> Never share this code. Contact alerto.system2026@gmail.com if you did not request this.</p></div></div>`,
+            value: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
+                <div style="background-color: #0b1723; padding: 22px; text-align: center; color: #ffffff;">
+                  <h2 style="margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.5px;">ALERTO ACCOUNT VERIFICATION</h2>
+                </div>
+                <div style="padding: 28px; color: #1a202c; line-height: 1.6;">
+                  <p style="font-size: 15px;">Dear <strong>${recipientName}</strong>,</p>
+                  <p style="font-size: 14px; color: #4a5568;">
+                    Thank you for signing up with Alerto via Google. To complete your account creation and verify your email address, please use the One-Time Password (OTP) provided below:
+                  </p>
+                  
+                  <div style="background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
+                    <div style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #0b1723; font-family: monospace;">
+                      ${otp}
+                    </div>
+                    <p style="margin: 8px 0 0 0; color: #718096; font-size: 13px;">
+                      This verification code expires in <strong>10 minutes</strong>.
+                    </p>
+                  </div>
+
+                  <p style="font-size: 13px; color: #4a5568;">
+                    <strong>Security Reminders:</strong><br/>
+                    • Never share this code with anyone.<br/>
+                    • If you did not sign up for an Alerto account, please disregard this email or report the incident to <a href="mailto:alerto.system2026@gmail.com" style="color: #3b4fb0; text-decoration: none;">alerto.system2026@gmail.com</a>.
+                  </p>
+                  
+                  <hr style="border: none; border-top: 1px solid #edf2f7; margin: 24px 0;" />
+                  <p style="font-size: 12px; color: #a0aec0; margin: 0;">
+                    Alerto Verification Services<br/>
+                    Support Contact: <a href="mailto:alerto.system2026@gmail.com" style="color: #a0aec0;">alerto.system2026@gmail.com</a>
+                  </p>
+                </div>
+              </div>
+            `,
           },
         ],
       }),

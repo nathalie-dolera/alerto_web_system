@@ -60,7 +60,7 @@ export async function POST(req: Request) {
                     This automated security notification is to inform you that three (3) consecutive failed password attempts were detected on your account.
                   </p>
                   
-                  <div style="background-color: #f7fafc; border-left: 4px solid #3b4fb0; padding: 14px 16px; margin: 20px 0; border-radius: 4px;">
+                  <div style="background-color: #ffffff; border: 2px solid #000000; padding: 14px 16px; margin: 20px 0; border-radius: 4px;">
                     <p style="margin: 0; color: #2d3748; font-weight: 600; font-size: 14px;">
                       Temporary Account Lockout
                     </p>

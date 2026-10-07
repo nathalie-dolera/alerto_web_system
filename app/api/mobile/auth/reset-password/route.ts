@@ -3,23 +3,20 @@ import bcrypt from "bcrypt";
 
 import { prisma } from "@/lib/prisma";
 import { hashPasswordResetToken } from "@/lib/password-reset";
-import { resetPasswordSchema, validateInput, formatValidationError } from "@/lib/validationSchemas";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // Validate input with zod schema
-    const validation = validateInput(resetPasswordSchema, body);
-    if (!validation.success) {
+    const { token, password } = body;
+
+    // Validate only the password field (confirmPassword matching is done on the frontend)
+    if (!password || typeof password !== 'string' || password.trim().length < 8) {
       return NextResponse.json(
-        { error: formatValidationError(validation.errors!) },
+        { error: "Password must be at least 8 characters." },
         { status: 400 }
       );
     }
-
-    const { token } = body;
-    const { password } = validation.data;
 
     if (!token || typeof token !== "string") {
       return NextResponse.json({ error: "Reset token is required" }, { status: 400 });

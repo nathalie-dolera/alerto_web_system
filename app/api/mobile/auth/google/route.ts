@@ -109,7 +109,7 @@ async function sendGoogleOtpEmail(user: { email: string; name: string | null }, 
                     Thank you for signing up with Alerto via Google. To complete your account creation and verify your email address, please use the One-Time Password (OTP) provided below:
                   </p>
                   
-                  <div style="background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
+                  <div style="background-color: #ffffff; border: 2px solid #000000; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
                     <div style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #0b1723; font-family: monospace;">
                       ${otp}
                     </div>
